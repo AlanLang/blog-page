@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta charset="utf-8">
+  
+<meta name="site" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;ros&#x2F;">
+<meta name="keywords" content="工具,硬件">
+<meta name="description" content="">
+<meta name="author" content="alanlang">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<!-- OG -->
+<meta property="og:image" content="https:&#x2F;&#x2F;vip2.loli.io&#x2F;2023&#x2F;06&#x2F;25&#x2F;paL2d7wckNugIHh.png">
+<meta property="og:description" content="">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="Alan&#x27;s Blog">
+<meta property="og:url" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;ros&#x2F;">
+<meta property="og:title" content="ROS 路由器入门指南 - Alan&#x27;s Blog">
+<meta property="twitter:partner" content="ogwp">
+<!-- /OG -->
+<!-- twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ROS 路由器入门指南 - Alan&#x27;s Blog">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="https:&#x2F;&#x2F;vip2.loli.io&#x2F;2023&#x2F;06&#x2F;25&#x2F;paL2d7wckNugIHh.png">
+<!-- /twitter -->  
+
+  <title>ROS 路由器入门指南 - Alan&#x27;s Blog</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link href="/assets/main.css" rel="stylesheet">
+   
+</head>
+
+<body class="flex flex-col min-h-full">
+  <nav class="flex justify-center items-center bg-zinc-700 py-2 " translate="no">
+    <div class="inner flex justify-center items-center sm:justify-between flex-col sm:flex-row mx-1">
+      <ul class="color-white flex flex-row justify-start gap-4">
+        <li><a class="nav-link opacity-90 text-2xl" href="https:&#x2F;&#x2F;alanlang.me">Alan&#x27;s Blog</a></li>
+      </ul>
+      <ul class="color-white flex flex-row gap-3 md:gap-4 items-center text-base">
+        <li> <a class="nav-link hidden" href="https:&#x2F;&#x2F;alanlang.me/books"> Books </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/codes"> Codes </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/research"> Research </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/practical"> Practical </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/now"> Now </a> </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="flex flex-col flex-grow">
+    <div class="flex justify-center flex-grow min-h-[calc(100vh-15rem)]">
+      <div class="inner mb-2">
+        <div class="mt-4 lg:mt-6">
+          
+<h1 class="title font-medium text-2xl sm:text-3xl">
+  <a href="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;ros&#x2F;">
+      ROS 路由器入门指南
+  </a>
+</h1>
+<div class="flex gap-4 items-center my-1">
+ <time class="text-gray-500">2022-06-07</time>
+</div>
+<div class="prose lg:prose-xl max-w-full my-6">
+  <h2 id="shi-yao-shi-routeros">什么是 RouterOS</h2>
+<p>RouterOS（下面简称 ROS），是一款基于 Linux 的路由器操作系统，相比于品牌路由器，它功能更强大，相比于 OpenWrt 系统，它更稳定耐用，高流量负载也不容易死机。ROS 的配置十分强大，且每次修改配置后无需重启即可生效，十分适合作为家里的主路由使用。</p>
+<h2 id="shou-quan-qu-bie">授权区别</h2>
+<p>ROS 授权分 Level0-6 级别，主要是在一些线路数量进行限制，其实便宜的硬件产品，我们也跑不了那么多线路，毕竟性能有限，level 高也没有什么用途。而且我们卖到的硬件路由产品基本上都是 Level4 起步。以下是 License 的区别：</p>
+<p style="text-align:center;"><img src="https://alan-picpack.oss-cn-hangzhou.aliyuncs.com/uPic/20220105/wGNOda.jpg" alt="wGNOda"></p>
+<h2 id="ji-ben-pei-zhi">基本配置</h2>
+<h3 id="hui-fu-chu-han-she-zhi">恢复出厂设置</h3>
+<p>新拿到的机器还是推荐初始化一下，具体操作是：
+<strong>System -&gt; Reset Configuration</strong></p>
+<h3 id="xiu-gai-wang-kou-ming-cheng">修改网口名称</h3>
+<p>点击左侧目录的 Interfaces，打开 Interfaces 设置面板，选中 Interface 标签，双击相应的网卡来修改名称
+为了方便后续的操作，最好修改一下每个网口的名称。
+具体方法就是将当前计算机连接的网线挨个插在路由器的 lan 口的，有数据连接的接口就是当前所插的 lan 口，最好根据网口的物理顺序来命名每个网口名称，这样方便以后区分。</p>
+<h3 id="she-zhi-wang-qiao">设置网桥</h3>
+<p>为了让所有的 lan 口都在同一个网段，所以需要设置一个网桥</p>
+<h4 id="1-xin-jian-yi-ge-wang-qiao">1. 新建一个网桥</h4>
+<p>点击左侧目录的 Bridge，打开 Bridge 的设置面板，选中 Bridge 标签
+点击 + 号弹出新建 Bridge 的表单：
+General</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Name</td><td>输入框</td><td>bridge1（自己任意取）</td></tr>
+<tr><td>ARP</td><td>选择框</td><td>enabled</td></tr>
+</tbody></table>
+<p>点击 Apply 生效，点击 OK 关闭</p>
+<h4 id="2-ba-xu-yao-de-lan-kou-du-jia-ru-dao-wang-qiao-li">2. 把需要的 lan 口都加入到网桥里</h4>
+<p>点击 Bridge 设置面板下的 Ports 标签
+点击 + 号弹出 New Bridge Port 设置窗口</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Interface</td><td>选择框</td><td>Lan0（要加入 Bridge 的网口名）</td></tr>
+<tr><td>Bridge</td><td>选择框</td><td>bridge1（要加入的 Bridge 名称）</td></tr>
+</tbody></table>
+<p>点击 Apply 生效，点击 OK 关闭
+重复以上操作直到把所有需要加入网桥的 lan 口都添加进去。</p>
+<h3 id="she-zhi-lu-you-qi-lankou-wang-qiao-de-ip-di-zhi">设置路由器 lan口/网桥 的 ip 地址</h3>
+<p>用来设置路由器 lan 口的 ip 地址
+点击左侧目录的 IP 选项，打开 Address List 设置面板，
+点击 + 号打开 Address 新建表单</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Address</td><td>输入框</td><td>192.168.1.1/24（自己设置 ip 和子网掩码）</td></tr>
+<tr><td>Interfase</td><td>选择框</td><td>Bridge1（选择之前建的网桥）</td></tr>
+</tbody></table>
+<h3 id="jian-li-pppoe-bo-hao">建立 PPPOE 拨号</h3>
+<p>点击左侧目录的 Interfaces 选项，打开 Interfaces 设置面板
+点击 + 号，打开 Interface 设置面板
+General</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Name</td><td>输入框</td><td>Pppoe-out1（自己设置）</td></tr>
+<tr><td>Type</td><td>选择框</td><td>PPPoE Client</td></tr>
+<tr><td>Interfaces</td><td>选择框</td><td>etho-wan（选择 wan 口）</td></tr>
+</tbody></table>
+<p>Dial Out</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>User</td><td>输入框</td><td>用来拨号的用户名</td></tr>
+<tr><td>Password</td><td>输入框</td><td>用来拨号的密码</td></tr>
+</tbody></table>
+<p>点击 Apply 生效，点击 OK 关闭</p>
+<h3 id="she-zhi-di-zhi-wei-zhuang-ip-firewall">设置地址伪装（IP-&gt;firewall）</h3>
+<p>点击左侧目录的 IP -&gt; firewall 选项，打开 firewall 设置面板
+选择 NAT 标签，点击 + 号，弹出 NAT Rule 配置面板
+General</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Chain</td><td>选择框</td><td>srcnat</td></tr>
+</tbody></table>
+<p>Action</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Action</td><td>选择框</td><td>masquerade</td></tr>
+</tbody></table>
+<p>点击 Apply 生效，点击 OK 关闭</p>
+<h3 id="dns-she-zhi">DNS 设置</h3>
+<p>点击左侧目录的 IP -&gt; DNS 选项，打开 DNS Settings 设置面板</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Servers</td><td>输入框</td><td>写入本机地址或 DNS 服务器地址</td></tr>
+<tr><td>Max UDP Packet Size</td><td>输入框</td><td>8192（最大 UDP 数据包大小）</td></tr>
+<tr><td>Cache Size</td><td>输入框</td><td>20480（缓存大小，可以写大一点）</td></tr>
+</tbody></table>
+<p>点击 Apply 生效，点击 OK 关闭</p>
+<h3 id="she-zhi-dhcp-di-zhi-chi">设置 DHCP 地址池</h3>
+<p>点击左侧目录的 IP -&gt; IP Pool 选项，打开 IP Pool 设置面板
+点击 + 号 新建 IP Pool</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Name</td><td>输入框</td><td>dhcp_pool1（自己定）</td></tr>
+<tr><td>Addresses</td><td>输入框</td><td>192.168.1.100-192.168.1.200（自己定）</td></tr>
+<tr><td>Next Pool</td><td>输入框</td><td>none</td></tr>
+</tbody></table>
+<p>点击 Apply 生效，点击 OK 关闭</p>
+<h3 id="she-zhi-dhcp-server">设置 DHCP server</h3>
+<p>点击左侧目录的 IP -&gt; DHCP Server 选项，打开 DHCP Server 设置面板
+选中 DHCP 标签
+点击 + 号 新建一条 DHCP Server</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Name</td><td>输入框</td><td>dhcp1（自己定）</td></tr>
+<tr><td>Interface</td><td>选择框</td><td>bridge1（之前设置的网桥或 lan 口）</td></tr>
+<tr><td>Address Poll</td><td>选择框</td><td>dhcp_pool1（之前新建的地址池）</td></tr>
+</tbody></table>
+<p>点击 Apply 生效，点击 OK 关闭</p>
+<p>选中 Networks 标签
+点击 + 号 新建一条 DHCP Network</p>
+<table><thead><tr><th>表单项</th><th>类型</th><th>值</th></tr></thead><tbody>
+<tr><td>Address</td><td>输入框</td><td>192.168.1.0/24（自己定）</td></tr>
+<tr><td>Gateway</td><td>输入框</td><td>192.168.1.1（或是自己设置的网关地址）</td></tr>
+<tr><td>DNS Server</td><td>输入框</td><td>192.168.1.1（本机地址）</td></tr>
+<tr><td>点击 Apply 生效，点击 OK 关闭</td><td></td><td></td></tr>
+</tbody></table>
+<h3 id="diao-zheng-lu-you-de-fang-wen-fang-shi">调整路由的访问方式</h3>
+<p>点击左侧目录的 IP -&gt; services 选项，打开 IP Service List 设置面板
+为了安全考虑，我们关掉除了 winbox 之外的所有连接方式，只有在需要的时候再打开。</p>
+<h3 id="chuang-jian-zhang-hao">创建账号</h3>
+<p>点击左侧目录的 System -&gt; Users 选项，打开 User List 设置面板
+建议禁用掉默认的 admin 用户，新建一个新的用户</p>
+<h2 id="duan-kou-zhuan-fa">端口转发</h2>
+<p>如果家里有公网 IP 的话，就可以利用端口转发把公网的指定端口转发到内网指定设备的端口上，方便异地访问。</p>
+<p>首先打开防火墙设置
+IP -&gt; Firewall
+标签选择 nat，点击 + 号
+在弹出来的界面标签选择 General，Chain 选项选择 dstnat
+接着在上菜单栏选择 Action，然后在下面的 Action 选择 jump，在往下找到 Jump Targer 输入一个名称，这里大家随意，我填 port-nat，最后点击 OK。</p>
+<p>接下来我们去建立一条脚本，点击 System-Scripts：
+在上菜单栏点击 Scripts，然后点击加号，在弹出来的界面中，Name 输入一个名称，这个名称很重要，一定要记住，我建议新手朋友跟我一样就行，省的后面还要改脚本，我这里填入 dynamic_nat，在下面的代码框输入我给大家提供的脚本代码：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">:global</span><span style="color:#1f1f1f;"> addold
+</span><span style="color:#5597d6;">:global</span><span style="color:#1f1f1f;"> addnew
+</span><span style="color:#5597d6;">:set</span><span style="color:#1f1f1f;"> addnew </span><span style="color:#72ab00;">[</span><span style="color:#1f1f1f;">/interface get [/interface find name=</span><span style="color:#d07711;">&quot;pppoe-out1&quot;</span><span style="color:#72ab00;">]</span><span style="color:#1f1f1f;"> running]
+</span><span style="color:#5597d6;">:if</span><span style="color:#1f1f1f;"> ($</span><span style="color:#5597d6;">addnew</span><span style="color:#1f1f1f;">=true) </span><span style="color:#5597d6;">do</span><span style="color:#72ab00;">=</span><span style="color:#d07711;">{
+	:set addold </span><span style="color:#72ab00;">[</span><span style="color:#d07711;">/ip address get [/ip address find dynamic=yes interface=&quot;pppoe-out1&quot;</span><span style="color:#72ab00;">]</span><span style="color:#d07711;"> address]
+	:set addold </span><span style="color:#72ab00;">[</span><span style="color:#d07711;">:pick $</span><span style="color:#acb3c2;">addold</span><span style="color:#d07711;"> 0 (</span><span style="color:#72ab00;">[</span><span style="color:#d07711;">:len $</span><span style="color:#acb3c2;">addold </span><span style="color:#72ab00;">] -</span><span style="color:#d07711;">3)</span><span style="color:#72ab00;">]
+</span><span style="color:#d07711;">	/ip firewall nat set </span><span style="color:#72ab00;">[</span><span style="color:#d07711;">/ip firewall nat find comment=&quot;dynamic_nat&quot;</span><span style="color:#72ab00;">]</span><span style="color:#d07711;"> dst-address=$</span><span style="color:#acb3c2;">addold
+</span><span style="color:#d07711;">}
+</span></code></pre>
+<p>pppoe-out1 为 Interfaces 里你用来拨号的名称</p>
+<p>紧接着我们需要让它定时启动，但是这次我们不用定时任务功能（scheduler），我们用 PPP 里的 Profiles 来执行，这样的好处就是，跟拨号捆绑在一起，只有重新拨号，IP 肯定会改变，IP 一改变，马上检索到变化并赋值给 nat，非常高效及时，大家跟着我操作。
+回到 Ros 主界面，点击左菜单栏 PPP：在弹出的界面点击 Profiles，然后点加号，接着在 Name 输入名称，这里大家可以随意填写，我写的是 pppoe-clien-profile，但是可以跟我一样，在下面的 Change TCP MSS 勾选 yes，一定要勾选上，别忘了：
+然后点击上菜单栏 Scripts，在下面输入代码：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">delay</span><span style="color:#1f1f1f;"> 3s
+</span><span style="color:#5597d6;">:execute </span><span style="color:#d07711;">&quot;dynamic_nat&quot;
+</span></code></pre>
+<p>加粗部份需要改成你刚才设置 Scripts 时的命名，如果大家一直跟我保持一致，就不需要改动了，直接复制进去就好；另外，这里解释一下这段代码，意思就是每当重新拨号，3 秒中后系统就会执行以 dynamic_nat 命名的 Scripts 脚本，总的来说，就是跟拨号捆绑在了一起，非常舒服，及时性很高哦。设置完点击 OK 即可。</p>
+<p>我们一直在强调跟拨号捆绑，但是以上做的设置都是为捆绑做准备，那好，接下来我们把它们捆绑起来，点击左侧菜单栏，点击 Interfaces 进入界面后我们选择上菜单栏的 Interface，然后找到我们的拨号条目，不清楚如何拨号的新手朋友可以去看一下我篇二的内容，接着双击进入，在上菜单栏找到 Dial Out，接着在下面的 Profile 选项选择我们刚刚建立的 pppoe-clien-profile，然后其他选项不动，点击 OK。</p>
+<p>好了，到这里我们的 jump 指令设置（实现回流），以及捆绑拨号（实现自动、高效且及时的检索变动 IP）已经完成了，接下来就是做端口转发啦！！！</p>
+<p>我们后续所有的端口转发都在 nat 下设置，点击 IP-Firewall 点击 nat，再点击加号，在弹出来的页面点击 General，Chain 选择刚才我们设置 jump 时的命名，我之前命名为 port-nat，选择它，Protocl 选 tcp（常用类型 tcp 与 udp，视你转发的目的为准），Dst。Port 输入你外网自定义的端口号，你输入啥你访问的时候域名后就加啥。</p>
+<p>接着我们点击上菜单栏 Action，在下面的 Action 选择 dst-nat，然后在下面 To Addresses 输入你将要转发项目的内网 IP，我的群晖 IP 是 10.10.10.10.，所以把它填进去，根据你的具体情况来填写，To Port 输入你要映射的内网端口，这里的端口可不能乱写，要根据你将要转发的项目规定的端口来填写，群晖 WEB 的端口是 5000，window 系统的远程访问端口是 3389 等等，这些都是项目规定好的端口，这里要注意哦，最后点击 OK。</p>
+<p>这样端口转发就设置完毕了。</p>
+<h2 id="she-zhi-ddns">设置 DDNS</h2>
+<p>大部分用户即使有公网 IP，IP 地址也会动态改变，所以最好的方式应该是注册一个域名服务，每当 IP 地址变化后，把新的 IP 地址重新与域名绑定，这样我们无需记住 IP 地址，只需要记一个域名就可以了。
+这边推荐我<a href="https://github.com/AlanLang/ros-ddns-serverless">开源的基于 Vercel 的服务</a> 目前该服务支持阿里云和 cloudflare。</p>
+<p>接下来我们去建立一条脚本，点击 System-Scripts</p>
+<p>在上菜单栏点击 Scripts，然后点击加号，在弹出来的界面中，Name 输入一个名称，然后输入以下脚本</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">:local</span><span style="color:#1f1f1f;"> identifier </span><span style="color:#d07711;">&quot;&quot; </span><span style="color:#7f8989;">#id
+</span><span style="color:#1f1f1f;">:local secret </span><span style="color:#d07711;">&quot;&quot; </span><span style="color:#7f8989;">#token
+</span><span style="color:#1f1f1f;">:local type </span><span style="color:#d07711;">&quot;A&quot; </span><span style="color:#7f8989;">#解析类型，默认为A
+</span><span style="color:#1f1f1f;">:local name </span><span style="color:#d07711;">&quot;www&quot; </span><span style="color:#7f8989;">#域名前缀
+</span><span style="color:#1f1f1f;">:local domain </span><span style="color:#d07711;">&quot;demo.com&quot; </span><span style="color:#7f8989;">#主机名
+</span><span style="color:#1f1f1f;">:local pppoe </span><span style="color:#d07711;">&quot;pppoe-out1&quot; </span><span style="color:#7f8989;">#确定你的路由器的网口名称
+</span><span style="color:#1f1f1f;">:local ipaddr </span><span style="color:#72ab00;">[</span><span style="color:#1f1f1f;">/ip address get [/ip address find interface=$</span><span style="color:#5597d6;">pppoe</span><span style="color:#72ab00;">]</span><span style="color:#1f1f1f;"> address]
+</span><span style="color:#5597d6;">:set</span><span style="color:#1f1f1f;"> ipaddr </span><span style="color:#72ab00;">[</span><span style="color:#1f1f1f;">:pick $</span><span style="color:#5597d6;">ipaddr</span><span style="color:#1f1f1f;"> 0 ([len $</span><span style="color:#5597d6;">ipaddr</span><span style="color:#72ab00;">]</span><span style="color:#5597d6;"> -3</span><span style="color:#1f1f1f;">)</span><span style="color:#5597d6;">]
+:global</span><span style="color:#1f1f1f;"> aliip
+</span><span style="color:#5597d6;">:if</span><span style="color:#1f1f1f;"> ($</span><span style="color:#5597d6;">ipaddr</span><span style="color:#1f1f1f;"> != $</span><span style="color:#5597d6;">aliip</span><span style="color:#1f1f1f;">) </span><span style="color:#5597d6;">do</span><span style="color:#72ab00;">=</span><span style="color:#d07711;">{
+    :local result </span><span style="color:#72ab00;">[</span><span style="color:#d07711;">/tool fetch url=&quot;https://ros-ddns-serverless.vercel.app/api/aliyun?identifier=$</span><span style="color:#acb3c2;">identifier</span><span style="color:#d07711;">&amp;secret=$</span><span style="color:#acb3c2;">secret</span><span style="color:#d07711;">&amp;name=$</span><span style="color:#acb3c2;">name</span><span style="color:#d07711;">&amp;type=$</span><span style="color:#acb3c2;">type</span><span style="color:#d07711;">&amp;ip=$</span><span style="color:#acb3c2;">ipaddr</span><span style="color:#d07711;">&amp;domain=$</span><span style="color:#acb3c2;">domain</span><span style="color:#d07711;">&quot; as</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">value output=user</span><span style="color:#72ab00;">]</span><span style="color:#d07711;">;
+    :set aliip $</span><span style="color:#acb3c2;">ipaddr
+</span><span style="color:#d07711;">}
+</span></code></pre>
+<p>然后继续设置在每次在网络重新连接后，重新执行这个脚本即可。</p>
+<h3 id="zhi-jie-shi-yong-cloudflare-ti-gong-de-api">直接使用 cloudflare 提供的 api</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">:local</span><span style="color:#1f1f1f;"> pppoe </span><span style="color:#d07711;">&quot;pppoe-out1&quot;
+</span><span style="color:#5597d6;">:local</span><span style="color:#1f1f1f;"> ipaddr </span><span style="color:#72ab00;">[</span><span style="color:#1f1f1f;">/ip address get [/ip address find interface=$</span><span style="color:#5597d6;">pppoe</span><span style="color:#72ab00;">]</span><span style="color:#1f1f1f;"> address]
+</span><span style="color:#5597d6;">:set</span><span style="color:#1f1f1f;"> ipaddr </span><span style="color:#72ab00;">[</span><span style="color:#1f1f1f;">:pick $</span><span style="color:#5597d6;">ipaddr</span><span style="color:#1f1f1f;"> 0 ([len $</span><span style="color:#5597d6;">ipaddr</span><span style="color:#72ab00;">]</span><span style="color:#5597d6;"> -3</span><span style="color:#1f1f1f;">)</span><span style="color:#5597d6;">]
+:global</span><span style="color:#1f1f1f;"> aliip
+</span><span style="color:#5597d6;">:if</span><span style="color:#1f1f1f;"> ($</span><span style="color:#5597d6;">ipaddr</span><span style="color:#1f1f1f;"> != $</span><span style="color:#5597d6;">aliip</span><span style="color:#1f1f1f;">) </span><span style="color:#5597d6;">do</span><span style="color:#72ab00;">=</span><span style="color:#d07711;">{
+    :local result </span><span style="color:#72ab00;">[</span><span style="color:#d07711;">/tool fetch http</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">method=put mode=https http</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">header</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">field=X</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">Auth</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">Email:demo@gmail.com,X</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">Auth</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">Key:GLOBAL_KEY,content</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">type:application/json url=&quot;https://api.cloudflare.com/client/v4/zones/ZONE_IDENTIFIER/dns_records/RECORD_IDENTIFIER&quot; http</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">data=&quot;{</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">type</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">:</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">A</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">,</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">name</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">:</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">*.demo.net</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">,</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">content</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">:</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">$</span><span style="color:#acb3c2;">ipaddr</span><span style="color:#aeb52b;">\&quot;</span><span style="color:#d07711;">}&quot; as</span><span style="color:#72ab00;">-</span><span style="color:#d07711;">value output=user</span><span style="color:#72ab00;">]</span><span style="color:#d07711;">;
+    :set aliip $</span><span style="color:#acb3c2;">ipaddr
+</span><span style="color:#d07711;">}
+</span></code></pre><h2 id="yu-openwrt-pang-lu-you-pei-he">与 OpenWrt 旁路由配合</h2>
+<h3 id="wang-luo-tuo-bu-miao-shu">网络拓扑描述</h3>
+<p>RouteOS 作为主路由，负责稳定上网，IP 地址为 192.168.1.1</p>
+<p>OpenWrt 作为旁路由负责给一些设备出国留学，IP 地址为 192.168.1.2</p>
+<h3 id="wen-ti-xian-xiang">问题现象</h3>
+<p>主路由 DHCP 服务器，在通过 DHCP 分配 IP 地址的时候，需要指定网关为旁路由 192.168.1.2。</p>
+<p>当 OpenWRT 故障时，下面各种终端的网关仍然指向软路由 192.168.1.2，而网关 192.168.1.2 实际不可达而无法上网。DHCP 地址一旦分配完毕，DHCP 服务器无法在租期内撤销已分配给终端的 IP 地址（DHCP 协议不支持撤销动作），所以除非下面的各终端手动重新申请或因 DHCP 租期到期等原因，重新发起 DHCP 请求，申请了新的 IP 地址，并且把网关指向了 192.168.1.1 才能上网，否则持续无法联网。</p>
+<p>有几种解决方案，我觉得没有绝对的优劣之分，就看哪种适合自己：</p>
+<h4 id="jie-jue-fang-an-shuang-lu-you-zhi-jian-yun-xing-vrrp-xie-yi">解决方案 - 双路由之间运行 VRRP 协议</h4>
+<p>参考：https://www.right.com.cn/forum/thread-4044962-1-1.html</p>
+<p>ROS 与 OpenWRT 起 VRRP 协议，通过 DHCP 指定下一跳为虚拟网关 192.168.1.3 实现可靠性备份。</p>
+<p>OpenWRT VRRP 优先级高于 ROS 的优先级 100，所以 OpenWRT 的虚拟网关 192.168.1.2 活跃，能正常转发流量，可以出国留学等高级操作；</p>
+<p>当 OpenWRT 故障时，ROS 自动升为主，虚拟网关 192.168.1.1 生效可以转发路由，能正常上网，但是没有高级特性了。</p>
+<h4 id="ros-vrrp-xie-yi-pei-zhi">ROS VRRP 协议配置</h4>
+<p>ROS 上配置比较简单，新建一个 VRRP 接口，配置好参数，然后给这个 VRRP 接口配置虚拟网关 IP 地址 192.168.1.3 即可。Interface 是指能发现 OpenWRT 的接口；VRID 一定要和 OpenWRT 保持一致，我们设置为 51；Priority 是决定主备的优先级，这里采用默认的一百作为备份；Interval 是 VRRP 报文检测间隔，默认 1.00s 即可。注意勾选抢占模式 Preemption Mode，如果不勾选这个选项，即使 OpenWRT 挂了，ROS 也不会升级为主。认证密码建议不用填写；版本号 Version 是 2。</p>
+<p>ROS 上给这个 VRRP 配置 IP 地址，虚拟网关 192.168.1.3。如果此时 ROS 是主 VRRP，则地址正常；如果是备 VRRP，则地址是红色的。</p>
+<p><img src="https://alan-picpack.oss-cn-hangzhou.aliyuncs.com/20220115203508.png" alt="https://alan-picpack.oss-cn-hangzhou.aliyuncs.com/20220115203508.png" title="https://alan-picpack.oss-cn-hangzhou.aliyuncs.com/20220115203508.png" /></p>
+<h4 id="openwrt-vrrp-xie-yi-pei-zhi">OpenWRT VRRP 协议配置</h4>
+<p><code>OpenWRT</code>上需要安装<code>keepalived</code></p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">vi</span><span style="color:#1f1f1f;"> /etc/keepalived/keepalived.conf
+</span></code></pre><pre style="background-color:#f5f5f5;">
+<code class="language-conf" data-lang="conf"><span style="color:#668f14;">global_defs </span><span style="color:#1f1f1f;">{
+   </span><span style="color:#5597d6;">router_id </span><span style="color:#da5d42;">LVS_DEVEL
+</span><span style="color:#1f1f1f;">}
+
+</span><span style="color:#5597d6;">vrrp_instance </span><span style="color:#da5d42;">VI_1</span><span style="color:#1f1f1f;"> {
+    </span><span style="color:#5597d6;">state </span><span style="color:#da5d42;">MASTER
+    </span><span style="color:#5597d6;">interface </span><span style="color:#1f1f1f;">br</span><span style="color:#72ab00;">-</span><span style="color:#1f1f1f;">lan
+    </span><span style="color:#5597d6;">virtual_router_id </span><span style="color:#b3933a;">51
+    </span><span style="color:#5597d6;">priority </span><span style="color:#b3933a;">110
+    </span><span style="color:#5597d6;">advert_int </span><span style="color:#b3933a;">1
+</span><span style="color:#668f14;">    virtual_ipaddress </span><span style="color:#1f1f1f;">{
+        </span><span style="color:#5597d6;">192</span><span style="color:#72ab00;">.</span><span style="color:#b3933a;">168</span><span style="color:#72ab00;">.</span><span style="color:#b3933a;">1</span><span style="color:#72ab00;">.</span><span style="color:#b3933a;">3</span><span style="color:#72ab00;">/</span><span style="color:#b3933a;">24</span><span style="color:#1f1f1f;"> dev br</span><span style="color:#72ab00;">-</span><span style="color:#1f1f1f;">lan
+    }
+}
+</span></code></pre>
+<p>配置开机启动：<code>service keepalived enable</code></p>
+<h4 id="cai-keng">踩坑</h4>
+<p>搞了 5 个多小时，<code>openwrt</code>的<code>keepalived</code>始终 ping 不通，原来还要设置下这边：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">more</span><span style="color:#1f1f1f;"> /etc/config/keepalived
+</span></code></pre><pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">config</span><span style="color:#1f1f1f;"> globals </span><span style="color:#d07711;">&#39;globals&#39;
+ </span><span style="color:#5597d6;">option</span><span style="color:#1f1f1f;"> alt_config_file </span><span style="color:#d07711;">&quot;/etc/keepalived/keepalived.conf&quot;
+</span></code></pre>
+<p>当<code>keepalived</code>启动时，系统会根据 <code>/etc/keepalived/keepalived.conf</code> 来生成<code>/tmp/keepalived.conf</code> 但是要先在<code>/etc/config/keepalived</code>里设置好路径</p>
+<p>因为实际是以文件<code>/tmp/keepalived.conf</code>来起作用的</p>
+
+</div>
+
+
+
+
+        </div>
+      </div>
+    </div>
+    
+<div class="mt-4 mb-6 flex flex-row items-center justify-center">
+  <svg id="loading" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block;" width="34px" height="34px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+    <defs>
+      <clipPath id="ldio-h4a348o36ew-cp">
+        <rect x="0" y="0" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;0;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="50;0;0;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+        <rect x="0" y="50" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="100;50;50;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;50;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+      </clipPath>
+    </defs>
+    <g transform="translate(50 50)"><g transform="scale(0.9)"><g transform="translate(-50 -50)">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" dur="2.2222222222222223s" repeatCount="indefinite" values="0 50 50;0 50 50;180 50 50;180 50 50;360 50 50" keyTimes="0;0.4;0.5;0.9;1"></animateTransform>
+        <path clip-path="url(#ldio-h4a348o36ew-cp)" fill="#5699d2" d="M54.864 50L54.864 50c0-1.291 0.689-2.412 1.671-2.729c9.624-3.107 17.154-12.911 19.347-25.296 c0.681-3.844-1.698-7.475-4.791-7.475H28.908c-3.093 0-5.472 3.631-4.791 7.475c2.194 12.385 9.723 22.189 19.347 25.296 c0.982 0.317 1.671 1.438 1.671 2.729v0c0 1.291-0.689 2.412-1.671 2.729C33.84 55.836 26.311 65.64 24.117 78.025 c-0.681 3.844 1.698 7.475 4.791 7.475h42.184c3.093 0 5.472-3.631 4.791-7.475C73.689 65.64 66.16 55.836 56.536 52.729 C55.553 52.412 54.864 51.291 54.864 50z"></path>
+        <path fill="#1d3f72" d="M81 81.5h-2.724l0.091-0.578c0.178-1.122 0.17-2.243-0.022-3.333C76.013 64.42 68.103 54.033 57.703 50.483l-0.339-0.116 v-0.715l0.339-0.135c10.399-3.552 18.31-13.938 20.642-27.107c0.192-1.089 0.2-2.211 0.022-3.333L78.276 18.5H81 c2.481 0 4.5-2.019 4.5-4.5S83.481 9.5 81 9.5H19c-2.481 0-4.5 2.019-4.5 4.5s2.019 4.5 4.5 4.5h2.724l-0.092 0.578 c-0.178 1.122-0.17 2.243 0.023 3.333c2.333 13.168 10.242 23.555 20.642 27.107l0.338 0.116v0.715l-0.338 0.135 c-10.4 3.551-18.31 13.938-20.642 27.106c-0.193 1.09-0.201 2.211-0.023 3.333l0.092 0.578H19c-2.481 0-4.5 2.019-4.5 4.5 s2.019 4.5 4.5 4.5h62c2.481 0 4.5-2.019 4.5-4.5S83.481 81.5 81 81.5z M73.14 81.191L73.012 81.5H26.988l-0.128-0.309 c-0.244-0.588-0.491-1.538-0.28-2.729c2.014-11.375 8.944-20.542 17.654-23.354c2.035-0.658 3.402-2.711 3.402-5.108 c0-2.398-1.368-4.451-3.403-5.108c-8.71-2.812-15.639-11.979-17.653-23.353c-0.211-1.191 0.036-2.143 0.281-2.731l0.128-0.308 h46.024l0.128 0.308c0.244 0.589 0.492 1.541 0.281 2.731c-2.015 11.375-8.944 20.541-17.654 23.353 c-2.035 0.658-3.402 2.71-3.402 5.108c0 2.397 1.368 4.45 3.403 5.108c8.71 2.812 15.64 11.979 17.653 23.354 C73.632 79.651 73.384 80.604 73.14 81.191z"></path>
+      </g>
+    </g></g></g>
+  </svg>
+  <div id="like-btn" class="text-gray-400 hidden rounded-full border border-gray-300 p-1 px-3 flex flex-row items-center gap-2 cursor-pointer disabled">
+    <p> 👍 </p>
+    <p class="text-sm hidden" id="like-count" style="display: block;"></p>
+  </div>
+</div>
+
+
+    <footer class="flex border-t border-gray-300 text-gray-600 bg-gray-50 items-center justify-center text-sm mt-1" translate="no">
+      <div class="flex flex-col inner justify-center items-center gap-2 pt-6 pb-4">
+        <p> Be curious. Read widely. Try new things. -- Aaron Swartz </p>
+        <p> alanlang.me@gmail.com </p>
+        <ul>
+          <li class="flex flex-row gap-2">
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/archives">Archives</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/categories">Categories</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/tags">Tags</a>
+          </li>
+        </ul>
+        <p><a class="underline" href="https:&#x2F;&#x2F;alanlang.me/atom.xml">RSS</a></p>
+        <p>2022 - Present</p>
+      </div>
+    </footer>
+  </div>
+  
+<script defer type="text/javascript" src="/assets/main.js"></script>
+
+</body>
+
+</html>

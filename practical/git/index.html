@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta charset="utf-8">
+  
+<meta name="site" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;git&#x2F;">
+<meta name="keywords" content="工具,软件">
+<meta name="description" content="">
+<meta name="author" content="alanlang">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<!-- OG -->
+<meta property="og:image" content="https:&#x2F;&#x2F;vip2.loli.io&#x2F;2023&#x2F;06&#x2F;27&#x2F;mYpSBUXIerGZ3PH.webp">
+<meta property="og:description" content="">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="Alan&#x27;s Blog">
+<meta property="og:url" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;git&#x2F;">
+<meta property="og:title" content="GIT 技能手册 - Alan&#x27;s Blog">
+<meta property="twitter:partner" content="ogwp">
+<!-- /OG -->
+<!-- twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GIT 技能手册 - Alan&#x27;s Blog">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="https:&#x2F;&#x2F;vip2.loli.io&#x2F;2023&#x2F;06&#x2F;27&#x2F;mYpSBUXIerGZ3PH.webp">
+<!-- /twitter -->  
+
+  <title>GIT 技能手册 - Alan&#x27;s Blog</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link href="/assets/main.css" rel="stylesheet">
+   
+</head>
+
+<body class="flex flex-col min-h-full">
+  <nav class="flex justify-center items-center bg-zinc-700 py-2 " translate="no">
+    <div class="inner flex justify-center items-center sm:justify-between flex-col sm:flex-row mx-1">
+      <ul class="color-white flex flex-row justify-start gap-4">
+        <li><a class="nav-link opacity-90 text-2xl" href="https:&#x2F;&#x2F;alanlang.me">Alan&#x27;s Blog</a></li>
+      </ul>
+      <ul class="color-white flex flex-row gap-3 md:gap-4 items-center text-base">
+        <li> <a class="nav-link hidden" href="https:&#x2F;&#x2F;alanlang.me/books"> Books </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/codes"> Codes </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/research"> Research </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/practical"> Practical </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/now"> Now </a> </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="flex flex-col flex-grow">
+    <div class="flex justify-center flex-grow min-h-[calc(100vh-15rem)]">
+      <div class="inner mb-2">
+        <div class="mt-4 lg:mt-6">
+          
+<h1 class="title font-medium text-2xl sm:text-3xl">
+  <a href="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;git&#x2F;">
+      GIT 技能手册
+  </a>
+</h1>
+<div class="flex gap-4 items-center my-1">
+ <time class="text-gray-500">2022-06-08</time>
+</div>
+<div class="prose lg:prose-xl max-w-full my-6">
+  <h2 id="ji-chu-she-zhi">基础设置</h2>
+<p>Git 是一个开源的分布式版本控制系统，用于敏捷高效地处理任何或小或大的项目。
+Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个开放源码的版本控制软件。
+Git 与常用的版本控制工具 CVS, Subversion 等不同，它采用了分布式版本库的方式，不必服务器端软件支持。</p>
+<p>设置全局用户名和邮箱</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> config</span><span style="color:#5597d6;"> --global</span><span style="color:#1f1f1f;"> user.name </span><span style="color:#d07711;">&#39;alan&#39; 
+</span><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> config</span><span style="color:#5597d6;"> --global</span><span style="color:#1f1f1f;"> user.email </span><span style="color:#d07711;">&#39;langwdalan@gmail.com&#39;
+</span></code></pre>
+<p>当前项目设置用户名和邮箱</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> config user.name </span><span style="color:#d07711;">&#39;alan&#39; 
+</span><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> config user.email </span><span style="color:#d07711;">&#39;langwdalan@gmail.com&#39;
+</span></code></pre>
+<p>创建SSH Key</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">ssh-keygen -t</span><span style="color:#1f1f1f;"> rsa</span><span style="color:#5597d6;"> -C </span><span style="color:#d07711;">&quot;langwdalan@gmail.com&quot;
+</span></code></pre><h2 id="ji-ben-cao-zuo">基本操作</h2>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> clone
+</span><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> add .
+</span><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> commit</span><span style="color:#5597d6;"> -m </span><span style="color:#d07711;">&quot;提交信息&quot;
+</span><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> push
+</span></code></pre><h2 id="jin-jie-cao-zuo">进阶操作</h2>
+<h3 id="diff">DIFF</h3>
+<p>比较两个分支</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> diff branch1 branch2 </span><span style="color:#72ab00;">&gt;</span><span style="color:#1f1f1f;"> alan.diff
+</span></code></pre>
+<p>比较两个分支(包括二进制文件)</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> diff branch1 branch2</span><span style="color:#5597d6;"> --binary </span><span style="color:#72ab00;">&gt;</span><span style="color:#1f1f1f;"> alan.diff
+</span></code></pre>
+<p>比较当前HEAD修改</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> diff HEAD </span><span style="color:#72ab00;">&gt;</span><span style="color:#1f1f1f;"> alan.diff
+</span></code></pre><h3 id="rebase">rebase</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> rebase</span><span style="color:#5597d6;"> -i</span><span style="color:#1f1f1f;"> head</span><span style="color:#5597d6;">~</span><span style="color:#1f1f1f;">4
+
+</span><span style="color:#5597d6;">pick</span><span style="color:#1f1f1f;"> 68fdb81 第一次提交
+</span><span style="color:#5597d6;">squash</span><span style="color:#1f1f1f;"> b98e7be 第二次提交
+</span><span style="color:#5597d6;">pick</span><span style="color:#1f1f1f;"> a15c25a 第三次提交
+</span><span style="color:#5597d6;">fixup</span><span style="color:#1f1f1f;"> 6810ed4 第四次提交
+ 
+</span><span style="color:#7f8989;"># Rebase 83d844c..6810ed4 onto 83d844c (4 command(s))
+#
+# Commands:
+# p, pick = use commit
+# r, reword = use commit, but edit the commit message
+# e, edit = use commit, but stop for amending
+# s, squash = use commit, but meld into previous commit
+# f, fixup = like &quot;squash&quot;, but discard this commit&#39;s log message
+# x, exec = run command (the rest of the line) using shell
+# d, drop = remove commit
+</span></code></pre>
+<p>使用rebase进行分支合并</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> rebase </span><span style="color:#72ab00;">[</span><span style="color:#1f1f1f;">merge 的来源分支名</span><span style="color:#72ab00;">]
+</span></code></pre><h3 id="shi-yong-shang-yi-ge-commit">使用上一个 commit</h3>
+<p>添加修改：git add .
+合并到上一次的提交并使用原来的 commit 信息：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> commit</span><span style="color:#5597d6;"> --amend --no-edit
+</span></code></pre>
+<p>合并到上一次的提交并修改 commit 信息</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> commit</span><span style="color:#5597d6;"> --amend
+</span></code></pre><h3 id="xiu-gai-zui-hou-yi-ci-ti-jiao-commit-de-xin-xi">修改最后一次提交 commit 的信息</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#7f8989;"># 修改最近提交的 commit 信息
+</span><span style="color:#5597d6;">$</span><span style="color:#1f1f1f;"> git commit</span><span style="color:#5597d6;"> --amend --message</span><span style="color:#72ab00;">=</span><span style="color:#d07711;">&quot;modify message by daodaotest&quot;</span><span style="color:#5597d6;"> --author</span><span style="color:#72ab00;">=</span><span style="color:#d07711;">&quot;jiangliheng &lt;jiang_liheng@163.com&gt;&quot;
+
+</span><span style="color:#7f8989;"># 仅修改 message 信息
+</span><span style="color:#1f1f1f;">$ git commit</span><span style="color:#5597d6;"> --amend --message</span><span style="color:#72ab00;">=</span><span style="color:#d07711;">&quot;modify message by daodaotest&quot;
+
+</span><span style="color:#7f8989;"># 仅修改 author 信息
+</span><span style="color:#1f1f1f;">$ git commit</span><span style="color:#5597d6;"> --amend --author</span><span style="color:#72ab00;">=</span><span style="color:#d07711;">&quot;jiangliheng &lt;jiang_liheng@163.com&gt;&quot;
+</span></code></pre><h3 id="qiang-zhi-ti-jiao">强制提交</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> push</span><span style="color:#5597d6;"> --force
+</span></code></pre><h3 id="push-an-empty-commit">Push an Empty Commit</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> commit</span><span style="color:#5597d6;"> --allow-empty -m </span><span style="color:#d07711;">&quot;Empty commit&quot;
+</span></code></pre><h3 id="log">log</h3>
+<p>将日志输出到文件里</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> log </span><span style="color:#72ab00;">&gt;</span><span style="color:#1f1f1f;"> alan.txt
+</span></code></pre>
+<p>简单显示 git 日志</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> log</span><span style="color:#5597d6;"> --pretty</span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;">oneline
+</span></code></pre><h3 id="hui-tui-ben-di-xiu-gai">回退本地修改</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> reset</span><span style="color:#5597d6;"> --hard </span><span style="color:#72ab00;">&lt;</span><span style="color:#1f1f1f;">需要回退到的版本号（只需输入前几位）</span><span style="color:#72ab00;">&gt;
+</span></code></pre>
+<p><code>hard</code>和<code>soft</code>还有<code>mixed</code> 的区别可以看<a href="https://stackoverflow.com/questions/3528245/whats-the-difference-between-git-reset-mixed-soft-and-hard">这里</a></p>
+<h3 id="qiang-zhi-jiang-ben-di-ban-ben-fu-gai-yao-yuan-duan">强制将本地版本覆盖要远端</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> push origin </span><span style="color:#72ab00;">&lt;</span><span style="color:#1f1f1f;">分支名</span><span style="color:#72ab00;">&gt; </span><span style="color:#1f1f1f;">--force
+</span></code></pre><h3 id="che-xiao-yuan-cheng-ban-ben-de-mou-yi-ci-ti-jiao">撤销远程版本的某一次提交</h3>
+<p>比如</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">A1–A2–B1
+</span></code></pre>
+<p>如果想撤销A2的提交</p>
+<pre style="background-color:#f5f5f5;">
+<code><span style="color:#1f1f1f;">git revert HEAD                     //撤销最近一次提交
+git revert HEAD~1                   //撤销上上次的提交，注意：数字从0开始
+git revert 0ffaacc                  //撤销0ffaacc这次提交
+</span></code></pre>
+<p>git revert 命令意思是撤销某次提交。它会产生一个新的提交，虽然代码回退了，但是版本依然是向前的，所以，当你用revert回退之后，所有人pull之后，他们的代码也自动的回退了。 但是，要注意以下几点：</p>
+<h3 id="cong-yi-ge-fen-zhi-he-bing-te-ding-de-commitsdao-ling-yi-ge-fen-zhi">从一个分支合并特定的commits到另一个分支</h3>
+<h4 id="dan-ge-commit">单个commit</h4>
+<p>比如</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">dd2e86</span><span style="color:#1f1f1f;"> - 946992</span><span style="color:#5597d6;"> -9143a9</span><span style="color:#1f1f1f;"> - a6fd86 - 5a6057 </span><span style="color:#72ab00;">[</span><span style="color:#1f1f1f;">master</span><span style="color:#72ab00;">]
+           </span><span style="color:#1f1f1f;">\
+            </span><span style="color:#5597d6;">76cada</span><span style="color:#1f1f1f;"> - 62ecb3 - b886a0 </span><span style="color:#72ab00;">[</span><span style="color:#1f1f1f;">feature</span><span style="color:#72ab00;">]
+</span></code></pre>
+<p>比如，feature 分支上的commit 62ecb3 非常重要，它含有一个bug的修改，或其他人想访问的内容。无论什么原因，你现在只需要将62ecb3 合并到master，而不合并feature上的其他commits，所以我们用git cherry-pick命令来做：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> checkout master
+</span><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> cherry-pick 62ecb3
+</span></code></pre>
+<p>这样就好啦。现在62ecb3 就被合并到master分支，并在master中添加了commit（作为一个新的commit）。 cherry-pick 和merge比较类似，如果git不能合并代码改动（比如遇到合并冲突），git需要你自己来解决冲突并手动添加commit。</p>
+<h4 id="duo-ge-commit">多个commit</h4>
+<p>还以上例为例，假设你需要合并feature分支的commit 76cada ~62ecb3 到master分支。 首先需要基于feature创建一个新的分支，并指明新分支的最后一个commit：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> checkout</span><span style="color:#5597d6;"> -b</span><span style="color:#1f1f1f;"> newbranch 62ecb3
+</span></code></pre>
+<p>然后，rebase这个新分支的commit到master（–ontomaster）。76cada^ 指明你想从哪个特定的commit开始。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> rebase</span><span style="color:#5597d6;"> --onto</span><span style="color:#1f1f1f;"> master 76cada^
+</span></code></pre>
+<p>得到的结果就是feature分支的commit 76cada ~62ecb3 都被合并到了master分支。</p>
+<h2 id="clone-fork-and-pull-request">Clone, Fork, and Pull Request</h2>
+<p>全局配置完成后，就能正式进入开发和提交补丁的流程了。
+不像大部分教程介绍的 fork, clone, and pull request 流程，实际上符合上游优先直觉的参与过程应该是 clone, fork, and pull request 才对。
+第一步，当你看到一个有趣的项目，起了阅读代码和开发的念头，此时你并不知道自己是不是真的会提交一个补丁，所以做简单的做法是直接从上游地址克隆源代码。例如，要想克隆 Apache Pulsar 的源代码，可以执行以下命令：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> clone https://github.com/apache/pulsar.git
+</span></code></pre>
+<p>随后，你就可以打开项目源代码开始阅读，做一些变更并观察效果。
+第二步，当你发现本地的变更值得推送回上游时，由于你没有权限直接 push commit 到上游仓库，你需要从上游仓库 fork 一份到自己的工作空间当中，从而进一步推送修改和提交补丁。同样以 Apache Pulsar 为例，</p>
+<ol>
+<li>打开 http://github.com/apache/pulsar 仓库页面。</li>
+<li>点击页面右上方的 Fork 按钮。</li>
+<li>选择正确的账号并确认。</li>
+<li>成功后，应该可以在个人账号下看到 fork 出来的 pulsar 仓库。</li>
+</ol>
+<p>第三步，fork 动作只是发生在 GitHub 平台上，接下来还需要在本地 Git 仓库配置 remote 信息，注意一下 Git 操作的当前路径都是项目根目录。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> remote add dev https://github.com/</span><span style="color:#72ab00;">&lt;</span><span style="color:#1f1f1f;">your-user-name</span><span style="color:#72ab00;">&gt;</span><span style="color:#1f1f1f;">/</span><span style="color:#72ab00;">&lt;</span><span style="color:#1f1f1f;">project</span><span style="color:#72ab00;">&gt;</span><span style="color:#1f1f1f;">.git
+</span></code></pre>
+<p>还是以 Apache Pulsar 为例，将用户名和仓库名相应替换后运行上述命令，成功返回后查询当前 remote 配置信息：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> remote</span><span style="color:#5597d6;"> -v
+</span><span style="color:#7f8989;">#OUTPUT:
+#dev    https://github.com/tisonkun/pulsar.git (fetch)
+#dev    https://github.com/tisonkun/pulsar.git (push)
+#origin https://github.com/apache/pulsar.git (fetch)
+#origin https://github.com/apache/pulsar.git (push)
+</span></code></pre>
+<p>接下来，就可以切出开发分支，commit 变更并提交补丁了。
+在命令行界面完成 commit 动作并将改动分支推送到 fork 仓库上：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> checkout</span><span style="color:#5597d6;"> -b</span><span style="color:#1f1f1f;"> feature-branch
+</span><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> add .
+</span><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> commit</span><span style="color:#5597d6;"> -s -m </span><span style="color:#d07711;">&quot;commit message&quot;
+</span><span style="color:#5597d6;">git</span><span style="color:#1f1f1f;"> push</span><span style="color:#5597d6;"> --set-upstream</span><span style="color:#1f1f1f;"> dev
+</span></code></pre>
+<p>打开上游仓库页面。如果你是刚推送的分支，GitHub 会有横幅提示，点击 Compare &amp; pull request 从最近推送的对应分支创建一个 Pull Request 请求；否则，需要从 Pull requests 页面点击 New pull request 按钮，点击蓝色的 compare cross forks 字样，选择 HEAD 信息为 fork 仓库和对应的分支来创建。
+相比于常见的 fork and clone 流程以及后续将 fork 分支作为 origin 而把上游称为 upstream 的做法，这里介绍的 clone and fork 流程有以下几点好处。</p>
+<ul>
+<li>第一，顺序自然。不是每个克隆的项目在一开始就都是为了提交补丁，这样的顺序不需要在一开始就创建一个 fork 仓库。</li>
+<li>第二，默认分支自动拉取上游，无需额外的配置。大部分情况下，fork 仓库的默认分支都不会再更新。如果 origin 是 fork 仓库，要想拉取上游默认分支，要么需要修改仓库配置里的分支上游，要么就要在 fork 仓库页面上 Sync fork 在拉取，都需要额外的操作。</li>
+<li>第三，推送分支的命令更简洁。如果 origin 是 fork 仓库，则 git push 时需要在 --set-upstream origin 后再加一个分支名。</li>
+</ul>
+<h2 id="gen-ju-commit-chai-fen-pr">根据 commit 拆分 PR</h2>
+<p>有没有遇到过 Code Review 时发现内容太多，想拆分 Commit 却没法下手？
+我以前使用的方案是提交多个连续 PR，然后在 PR B 里面写清楚本 PR 依赖于 A PR，请先合并 A 再 Code Review。</p>
+<p>有没有更好的方案？当然有：git rebase 自带一个 --onto 功能可以快速拆分 Commits，高效又可靠。</p>
+<p><img src="https://cdn.sa.net/2024/03/07/zdEgVSPrQ4Mpf3Y.webp" alt="" /></p>
+
+</div>
+
+
+
+<div class="fixed flex-col top-0 bottom-0 right-0 left-[calc((100%-48rem)/2+50rem)] items-center justify-center hidden xl:flex">
+  <nav class="docs-toc flex select-none items-center justify-center">
+    <nav>
+      <ul>
+        
+        <li><a data-id="ji-chu-she-zhi" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#ji-chu-she-zhi">基础设置</a></li>
+        
+        
+        <li><a data-id="ji-ben-cao-zuo" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#ji-ben-cao-zuo">基本操作</a></li>
+        
+        
+        <li><a data-id="jin-jie-cao-zuo" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#jin-jie-cao-zuo">进阶操作</a></li>
+        
+        <ul>
+          
+          <li><a data-id="diff" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#diff">DIFF</a></li>
+          
+          <li><a data-id="rebase" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#rebase">rebase</a></li>
+          
+          <li><a data-id="shi-yong-shang-yi-ge-commit" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#shi-yong-shang-yi-ge-commit">使用上一个 commit</a></li>
+          
+          <li><a data-id="xiu-gai-zui-hou-yi-ci-ti-jiao-commit-de-xin-xi" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#xiu-gai-zui-hou-yi-ci-ti-jiao-commit-de-xin-xi">修改最后一次提交 commit 的信息</a></li>
+          
+          <li><a data-id="qiang-zhi-ti-jiao" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#qiang-zhi-ti-jiao">强制提交</a></li>
+          
+          <li><a data-id="push-an-empty-commit" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#push-an-empty-commit">Push an Empty Commit</a></li>
+          
+          <li><a data-id="log" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#log">log</a></li>
+          
+          <li><a data-id="hui-tui-ben-di-xiu-gai" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#hui-tui-ben-di-xiu-gai">回退本地修改</a></li>
+          
+          <li><a data-id="qiang-zhi-jiang-ben-di-ban-ben-fu-gai-yao-yuan-duan" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#qiang-zhi-jiang-ben-di-ban-ben-fu-gai-yao-yuan-duan">强制将本地版本覆盖要远端</a></li>
+          
+          <li><a data-id="che-xiao-yuan-cheng-ban-ben-de-mou-yi-ci-ti-jiao" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#che-xiao-yuan-cheng-ban-ben-de-mou-yi-ci-ti-jiao">撤销远程版本的某一次提交</a></li>
+          
+          <li><a data-id="cong-yi-ge-fen-zhi-he-bing-te-ding-de-commitsdao-ling-yi-ge-fen-zhi" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#cong-yi-ge-fen-zhi-he-bing-te-ding-de-commitsdao-ling-yi-ge-fen-zhi">从一个分支合并特定的commits到另一个分支</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="clone-fork-and-pull-request" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#clone-fork-and-pull-request">Clone, Fork, and Pull Request</a></li>
+        
+        
+        <li><a data-id="gen-ju-commit-chai-fen-pr" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/git/#gen-ju-commit-chai-fen-pr">根据 commit 拆分 PR</a></li>
+        
+        
+      </ul>
+    </nav>
+  </nav>
+</div>
+
+
+        </div>
+      </div>
+    </div>
+    
+<div class="mt-4 mb-6 flex flex-row items-center justify-center">
+  <svg id="loading" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block;" width="34px" height="34px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+    <defs>
+      <clipPath id="ldio-h4a348o36ew-cp">
+        <rect x="0" y="0" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;0;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="50;0;0;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+        <rect x="0" y="50" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="100;50;50;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;50;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+      </clipPath>
+    </defs>
+    <g transform="translate(50 50)"><g transform="scale(0.9)"><g transform="translate(-50 -50)">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" dur="2.2222222222222223s" repeatCount="indefinite" values="0 50 50;0 50 50;180 50 50;180 50 50;360 50 50" keyTimes="0;0.4;0.5;0.9;1"></animateTransform>
+        <path clip-path="url(#ldio-h4a348o36ew-cp)" fill="#5699d2" d="M54.864 50L54.864 50c0-1.291 0.689-2.412 1.671-2.729c9.624-3.107 17.154-12.911 19.347-25.296 c0.681-3.844-1.698-7.475-4.791-7.475H28.908c-3.093 0-5.472 3.631-4.791 7.475c2.194 12.385 9.723 22.189 19.347 25.296 c0.982 0.317 1.671 1.438 1.671 2.729v0c0 1.291-0.689 2.412-1.671 2.729C33.84 55.836 26.311 65.64 24.117 78.025 c-0.681 3.844 1.698 7.475 4.791 7.475h42.184c3.093 0 5.472-3.631 4.791-7.475C73.689 65.64 66.16 55.836 56.536 52.729 C55.553 52.412 54.864 51.291 54.864 50z"></path>
+        <path fill="#1d3f72" d="M81 81.5h-2.724l0.091-0.578c0.178-1.122 0.17-2.243-0.022-3.333C76.013 64.42 68.103 54.033 57.703 50.483l-0.339-0.116 v-0.715l0.339-0.135c10.399-3.552 18.31-13.938 20.642-27.107c0.192-1.089 0.2-2.211 0.022-3.333L78.276 18.5H81 c2.481 0 4.5-2.019 4.5-4.5S83.481 9.5 81 9.5H19c-2.481 0-4.5 2.019-4.5 4.5s2.019 4.5 4.5 4.5h2.724l-0.092 0.578 c-0.178 1.122-0.17 2.243 0.023 3.333c2.333 13.168 10.242 23.555 20.642 27.107l0.338 0.116v0.715l-0.338 0.135 c-10.4 3.551-18.31 13.938-20.642 27.106c-0.193 1.09-0.201 2.211-0.023 3.333l0.092 0.578H19c-2.481 0-4.5 2.019-4.5 4.5 s2.019 4.5 4.5 4.5h62c2.481 0 4.5-2.019 4.5-4.5S83.481 81.5 81 81.5z M73.14 81.191L73.012 81.5H26.988l-0.128-0.309 c-0.244-0.588-0.491-1.538-0.28-2.729c2.014-11.375 8.944-20.542 17.654-23.354c2.035-0.658 3.402-2.711 3.402-5.108 c0-2.398-1.368-4.451-3.403-5.108c-8.71-2.812-15.639-11.979-17.653-23.353c-0.211-1.191 0.036-2.143 0.281-2.731l0.128-0.308 h46.024l0.128 0.308c0.244 0.589 0.492 1.541 0.281 2.731c-2.015 11.375-8.944 20.541-17.654 23.353 c-2.035 0.658-3.402 2.71-3.402 5.108c0 2.397 1.368 4.45 3.403 5.108c8.71 2.812 15.64 11.979 17.653 23.354 C73.632 79.651 73.384 80.604 73.14 81.191z"></path>
+      </g>
+    </g></g></g>
+  </svg>
+  <div id="like-btn" class="text-gray-400 hidden rounded-full border border-gray-300 p-1 px-3 flex flex-row items-center gap-2 cursor-pointer disabled">
+    <p> 👍 </p>
+    <p class="text-sm hidden" id="like-count" style="display: block;"></p>
+  </div>
+</div>
+
+
+    <footer class="flex border-t border-gray-300 text-gray-600 bg-gray-50 items-center justify-center text-sm mt-1" translate="no">
+      <div class="flex flex-col inner justify-center items-center gap-2 pt-6 pb-4">
+        <p> Be curious. Read widely. Try new things. -- Aaron Swartz </p>
+        <p> alanlang.me@gmail.com </p>
+        <ul>
+          <li class="flex flex-row gap-2">
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/archives">Archives</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/categories">Categories</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/tags">Tags</a>
+          </li>
+        </ul>
+        <p><a class="underline" href="https:&#x2F;&#x2F;alanlang.me/atom.xml">RSS</a></p>
+        <p>2022 - Present</p>
+      </div>
+    </footer>
+  </div>
+  
+<script defer type="text/javascript" src="/assets/main.js"></script>
+
+</body>
+
+</html>

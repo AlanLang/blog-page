@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta charset="utf-8">
+  
+<meta name="site" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;ros-rbc&#x2F;">
+<meta name="keywords" content="工具,硬件">
+<meta name="description" content="">
+<meta name="author" content="alanlang">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<!-- OG -->
+<meta property="og:image" content="https:&#x2F;&#x2F;cdn.sa.net&#x2F;2024&#x2F;04&#x2F;14&#x2F;pmXThg2zd3tLcyr.jpg">
+<meta property="og:description" content="">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="Alan&#x27;s Blog">
+<meta property="og:url" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;ros-rbc&#x2F;">
+<meta property="og:title" content="ROS 搭配 Clash 彻底抛弃 OpenWrt - Alan&#x27;s Blog">
+<meta property="twitter:partner" content="ogwp">
+<!-- /OG -->
+<!-- twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ROS 搭配 Clash 彻底抛弃 OpenWrt - Alan&#x27;s Blog">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="https:&#x2F;&#x2F;cdn.sa.net&#x2F;2024&#x2F;04&#x2F;14&#x2F;pmXThg2zd3tLcyr.jpg">
+<!-- /twitter -->  
+
+  <title>ROS 搭配 Clash 彻底抛弃 OpenWrt - Alan&#x27;s Blog</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link href="/assets/main.css" rel="stylesheet">
+   
+</head>
+
+<body class="flex flex-col min-h-full">
+  <nav class="flex justify-center items-center bg-zinc-700 py-2 " translate="no">
+    <div class="inner flex justify-center items-center sm:justify-between flex-col sm:flex-row mx-1">
+      <ul class="color-white flex flex-row justify-start gap-4">
+        <li><a class="nav-link opacity-90 text-2xl" href="https:&#x2F;&#x2F;alanlang.me">Alan&#x27;s Blog</a></li>
+      </ul>
+      <ul class="color-white flex flex-row gap-3 md:gap-4 items-center text-base">
+        <li> <a class="nav-link hidden" href="https:&#x2F;&#x2F;alanlang.me/books"> Books </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/codes"> Codes </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/research"> Research </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/practical"> Practical </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/now"> Now </a> </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="flex flex-col flex-grow">
+    <div class="flex justify-center flex-grow min-h-[calc(100vh-15rem)]">
+      <div class="inner mb-2">
+        <div class="mt-4 lg:mt-6">
+          
+<h1 class="title font-medium text-2xl sm:text-3xl">
+  <a href="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;ros-rbc&#x2F;">
+      ROS 搭配 Clash 彻底抛弃 OpenWrt
+  </a>
+</h1>
+<div class="flex gap-4 items-center my-1">
+ <time class="text-gray-500">2024-04-14</time>
+</div>
+<div class="prose lg:prose-xl max-w-full my-6">
+  <p>之前自己一直在用主路由搭配旁路由的方式作为家里的网络架构，主路由为 MikroTik Routeros，旁路由为 OpenWrt。主路由通过设置 HDCP Options 给有需求的设备自动把网关和 DNS 指向旁路由。最终使用 VRRP 解决高可用的问题，防止旁路由下线时这些设备直接无法上网。</p>
+<p>但是使用 OpenWrt 作为旁路由有很多不满意的地方：</p>
+<ol>
+<li>OpenWrt 系统很臃肿，即使自己编译精简了很多没用的包，但是用起来还是卡卡的</li>
+<li>OpenWrt 系统无法平滑完成版本迭代，频繁升级导致重装系统很难受</li>
+<li>OpenClash 不好用，每次修改配置都要重启，每次重启都好久</li>
+<li>一旦把网关指向旁路由，设备的所有流量都会指向旁路由，导致常规流量变慢</li>
+<li>旁路由网关互指导致多次 nat，性能不佳</li>
+</ol>
+<p>所以一直想着去摒弃 OpenWrt，直到看到了一个大神做的 <a href="https://www.youtube.com/watch?v=eOr8yrp4KWk">YouTube</a> 视频，发现这种方式很适合自己，所以趁着周末的时间重新搞了一下家里的网络。</p>
+<p><img src="https://cdn.sa.net/2024/04/14/8Fj2l61PheryuKA.webp" alt="image.png" /></p>
+<p>之前家里主路由设备用的是 MikroTik RB450Gx4，这次趁机也升级成了 MikroTik RB5009 UPr，该设备除了有一个 2.4G 的网口和 7 个千兆的网口之外，还有一个 SFP 接口，方便以后直接使用光猫，这次就先不折腾了。另外设备还支持 POE 输出，正好可以给家里的 AP 设备供电。虽然内存还是 1GB 但是 CPU 提升了很多，所以性能会比之前那个强很多。</p>
+<p>那么我们来正式讲一下一种全新的分流方式：RBC</p>
+<h2 id="shi-yao-shi-rbc">什么是 RBC</h2>
+<p>RBC 其实就是 Routeros + BGP + Clash，即主路由系统 + 边界网关协议 + 透明网关</p>
+<p><img src="https://cdn.sa.net/2024/04/14/lrwxNCpz35oSXdm.webp" alt="image 1.png" /></p>
+<p>我们的域名会通过 DNS 解析服务器转换为 IP 地址，ROS 则负责判断 IP 是否存在于静态路由表，如果存在的话它就会走透明网关（Clash），不存在的话就走我们的主路由。</p>
+<p>为了做到上述的分流方式，我们的主要工作就是实现上图中的彩色部分。</p>
+<h2 id="dns-jie-xi-fu-wu-qi">DNS 解析服务器</h2>
+<p>视频里面使用的是 easy mosdns，而我自己则选择使用 <a href="https://github.com/kkkgo/PaoPaoDNS">PaoPaoDNS</a>，并不是后者一定比前者好用，只是自己随便选择了一个。</p>
+<p>PaoPaoDNS 的安装方式很简单，直接使用 Docker 可以安装，我个人是使用 PVE 单独创建了一台虚拟机，Docker 会用 host 网络模式已获得最佳性能。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-yaml" data-lang="yaml"><span style="color:#7f902a;">version</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;3&quot;
+
+</span><span style="color:#7f902a;">services</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f902a;">paopaodns</span><span style="color:#1f1f1f;">:
+    </span><span style="color:#7f902a;">image</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">sliamb/paopaodns:latest
+    container_name</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">PaoPaoDNS
+    restart</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">always
+    volumes</span><span style="color:#1f1f1f;">:
+      - </span><span style="color:#7f902a;">./data:/data
+    environment</span><span style="color:#1f1f1f;">:
+      - </span><span style="color:#7f902a;">TZ=Asia/Shanghai
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">UPDATE=weekly
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">DNS_SERVERNAME=PaoPaoDNS,blog.03k.org
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">DNSPORT=53
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">SOCKS5=no
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">CNAUTO=yes
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">IPV6=no
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">CNFALL=yes
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">AUTO_FORWARD=no
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">CN_TRACKER=yes
+      </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">SAFEMODE=no
+    network_mode</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">host
+</span></code></pre>
+<p>DNS 解析服务器我设置的 IP 地址是 <code>192.168.1.2</code></p>
+<h2 id="tou-ming-wang-guan">透明网关</h2>
+<p>首先设置转发</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;">echo &#39;net.ipv4.ip_forward = 1&#39; | sudo tee -a /etc/sysctl.conf
+echo &#39;net.ipv6.conf.all.forwarding = 1&#39; | sudo tee -a /etc/sysctl.conf
+</span></code></pre>
+<p>透明网关我选择使用的是<a href="https://wiki.metacubex.one/">虚空终端</a>，现在很多人也开始推荐 <a href="https://sing-box.sagernet.org/">sing-box</a> 后续也可以切换试试。</p>
+<p>虚空终端的安装教程官网很详细，照着官网安装就行。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;"># 下载（注意版本）
+wget https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/mihomo-linux-amd64-compatible-alpha-df01582.gz
+
+# 解压缩
+gunzip mihomo-linux-amd64-compatible-alpha-df01582.gz
+
+# 重命名
+mv mihomo-linux-amd64-compatible-alpha-df01582 clash
+
+# 赋予执行权限
+chmod +x clash
+
+# 移动到 /usr/local/bin
+mv clash /usr/local/bin
+
+# 创建配置文件夹
+mkdir -p /etc/clash
+</span></code></pre>
+<p>配置文件的内容如下 config.yaml</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-yaml" data-lang="yaml"><span style="color:#7f8989;">######### 锚点 start #######
+# proxy 相关
+</span><span style="color:#7f902a;">pr</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">&amp;</span><span style="color:#c23f31;">pr </span><span style="color:#1f1f1f;">{</span><span style="color:#7f902a;">type</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">select</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">proxies</span><span style="color:#1f1f1f;">: [</span><span style="color:#d07711;">默认</span><span style="color:#1f1f1f;">,</span><span style="color:#d07711;">香港</span><span style="color:#1f1f1f;">,</span><span style="color:#d07711;">台湾</span><span style="color:#1f1f1f;">,</span><span style="color:#d07711;">日本</span><span style="color:#1f1f1f;">,</span><span style="color:#d07711;">新加坡</span><span style="color:#1f1f1f;">,</span><span style="color:#d07711;">美国</span><span style="color:#1f1f1f;">,</span><span style="color:#d07711;">其它地区</span><span style="color:#1f1f1f;">,</span><span style="color:#d07711;">全部节点</span><span style="color:#1f1f1f;">,</span><span style="color:#d07711;">自动选择</span><span style="color:#1f1f1f;">,</span><span style="color:#d07711;">DIRECT</span><span style="color:#1f1f1f;">]}
+
+</span><span style="color:#7f8989;">#这里是订阅更新和延迟测试相关的
+</span><span style="color:#7f902a;">p</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">&amp;</span><span style="color:#c23f31;">p </span><span style="color:#1f1f1f;">{</span><span style="color:#7f902a;">type</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">http</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">interval</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">3600</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">health-check</span><span style="color:#1f1f1f;">: {</span><span style="color:#7f902a;">enable</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">url</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">http://www.google.com/generate_204</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">interval</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">300</span><span style="color:#1f1f1f;">}}
+
+</span><span style="color:#7f902a;">use</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">&amp;</span><span style="color:#c23f31;">use
+  </span><span style="color:#7f902a;">type</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">select
+  use</span><span style="color:#1f1f1f;">:
+  - </span><span style="color:#d07711;">provider1
+
+</span><span style="color:#7f8989;">######### 锚点 end #######
+
+
+# url 里填写自己的订阅,名称不能重复
+</span><span style="color:#7f902a;">proxy-providers</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f902a;">provider1</span><span style="color:#1f1f1f;">:
+    </span><span style="color:#b3933a;">&lt;&lt;</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">*</span><span style="color:#5597d6;">p
+    </span><span style="color:#7f902a;">url</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;&quot;
+
+</span><span style="color:#7f902a;">mode</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">rule
+ipv6</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">false
+</span><span style="color:#7f902a;">log-level</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">info
+allow-lan</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+</span><span style="color:#7f902a;">mixed-port</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">7890
+</span><span style="color:#7f902a;">unified-delay</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">false
+</span><span style="color:#7f902a;">tcp-concurrent</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+</span><span style="color:#7f902a;">external-controller</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">0.0.0.0:9090
+secret</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&#39;123456789&#39;
+
+</span><span style="color:#7f902a;">geodata-mode</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+</span><span style="color:#7f902a;">geox-url</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f902a;">geoip</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat&quot;
+  </span><span style="color:#7f902a;">geosite</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat&quot;
+  </span><span style="color:#7f902a;">mmdb</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb&quot;
+
+</span><span style="color:#7f902a;">profile</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f902a;">store-selected</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+  </span><span style="color:#7f902a;">store-fake-ip</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+  </span><span style="color:#7f902a;">tracing</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+
+</span><span style="color:#7f902a;">sniffer</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f902a;">enable</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+  </span><span style="color:#7f902a;">sniff</span><span style="color:#1f1f1f;">:
+    </span><span style="color:#7f902a;">TLS</span><span style="color:#1f1f1f;">:
+      </span><span style="color:#7f902a;">ports</span><span style="color:#1f1f1f;">: [</span><span style="color:#b3933a;">443</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">8443</span><span style="color:#1f1f1f;">]
+    </span><span style="color:#7f902a;">HTTP</span><span style="color:#1f1f1f;">:
+      </span><span style="color:#7f902a;">ports</span><span style="color:#1f1f1f;">: [</span><span style="color:#b3933a;">80</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">8080-8880</span><span style="color:#1f1f1f;">]
+      </span><span style="color:#7f902a;">override-destination</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+</span><span style="color:#7f902a;">interface-name</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">eth0
+tun</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f902a;">device</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">utun
+  enable</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+  </span><span style="color:#7f902a;">stack</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">system
+  auto-route</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+  </span><span style="color:#7f902a;">auto-detect-interface</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">false
+
+</span><span style="color:#7f902a;">dns</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f902a;">enable</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+  </span><span style="color:#7f902a;">listen</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">:1053
+  ipv6</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">false
+  </span><span style="color:#7f902a;">enhanced-mode</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">redir-host
+  fake-ip-range</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">28.0.0.1/8
+  fake-ip-filter</span><span style="color:#1f1f1f;">:
+    - </span><span style="color:#d07711;">&#39;*&#39;
+    </span><span style="color:#1f1f1f;">- </span><span style="color:#d07711;">&#39;+.lan&#39;
+    </span><span style="color:#1f1f1f;">- </span><span style="color:#d07711;">&#39;+.local&#39;
+  </span><span style="color:#7f902a;">default-nameserver</span><span style="color:#1f1f1f;">:
+    - </span><span style="color:#b3933a;">192.168.1.2
+  </span><span style="color:#7f902a;">nameserver</span><span style="color:#1f1f1f;">:
+    - </span><span style="color:#b3933a;">192.168.1.2
+  </span><span style="color:#7f902a;">proxy-server-nameserver</span><span style="color:#1f1f1f;">:
+    - </span><span style="color:#b3933a;">192.168.1.2
+  </span><span style="color:#7f902a;">nameserver-policy</span><span style="color:#1f1f1f;">:
+    </span><span style="color:#d07711;">&quot;geosite:cn,private&quot;</span><span style="color:#1f1f1f;">:
+      - </span><span style="color:#b3933a;">192.168.1.2
+
+</span><span style="color:#7f902a;">proxies</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f8989;"># - name: &quot;WARP&quot;
+  #   type: wireguard
+  #   server: engage.cloudflareclient.com
+  #   port: 2408
+  #   ip: &quot;172.16.0.2/32&quot;
+  #   ipv6: &quot;2606::1/128&quot;        # 自行替换
+  #   private-key: &quot;private-key&quot; # 自行替换
+  #   public-key: &quot;public-key&quot;   # 自行替换
+  #   udp: true
+  #   reserved: &quot;abba&quot;           # 自行替换
+  #   mtu: 1280
+  #   dialer-proxy: &quot;dns&quot;
+  #   remote-dns-resolve: true
+  #   dns:
+  #     - https://dns.cloudflare.com/dns-query
+
+</span><span style="color:#7f902a;">proxy-groups</span><span style="color:#1f1f1f;">:
+
+  - {</span><span style="color:#7f902a;">name</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">默认</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">type</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">select</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">proxies</span><span style="color:#1f1f1f;">: [</span><span style="color:#d07711;">DIRECT</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">香港</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">台湾</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">日本</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">新加坡</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">美国</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">其它地区</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">全部节点</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">自动选择</span><span style="color:#1f1f1f;">]}
+</span><span style="color:#7f8989;"># - {name: dns, type: select, proxies: [DIRECT, WARP, 香港, 台湾, 日本, 新加坡, 美国, 其它地区, 全部节点, 自动选择]}  # 加入 WARP  
+#分隔,下面是地区分组
+  </span><span style="color:#1f1f1f;">- {</span><span style="color:#7f902a;">name</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">香港</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">&lt;&lt;</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">*</span><span style="color:#5597d6;">use</span><span style="color:#1f1f1f;">,</span><span style="color:#7f902a;">filter</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;(?i)港|hk|hongkong|hong kong&quot;</span><span style="color:#1f1f1f;">}
+
+  - {</span><span style="color:#7f902a;">name</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">台湾</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">&lt;&lt;</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">*</span><span style="color:#5597d6;">use</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">filter</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;(?i)台|tw|taiwan&quot;</span><span style="color:#1f1f1f;">}
+
+  - {</span><span style="color:#7f902a;">name</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">日本</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">&lt;&lt;</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">*</span><span style="color:#5597d6;">use</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">filter</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;(?i)日本|jp|japan&quot;</span><span style="color:#1f1f1f;">}
+
+  - {</span><span style="color:#7f902a;">name</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">美国</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">&lt;&lt;</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">*</span><span style="color:#5597d6;">use</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">filter</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;(?i)美|us|unitedstates|united states&quot;</span><span style="color:#1f1f1f;">}
+
+  - {</span><span style="color:#7f902a;">name</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">新加坡</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">&lt;&lt;</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">*</span><span style="color:#5597d6;">use</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">filter</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;(?i)(新|sg|singapore)&quot;</span><span style="color:#1f1f1f;">}
+
+  - {</span><span style="color:#7f902a;">name</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">其它地区</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">&lt;&lt;</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">*</span><span style="color:#5597d6;">use</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">filter</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&quot;(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*&quot;</span><span style="color:#1f1f1f;">}
+
+  - {</span><span style="color:#7f902a;">name</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">全部节点</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">&lt;&lt;</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">*</span><span style="color:#5597d6;">use</span><span style="color:#1f1f1f;">}
+
+  - {</span><span style="color:#7f902a;">name</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">自动选择</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">&lt;&lt;</span><span style="color:#1f1f1f;">: </span><span style="color:#72ab00;">*</span><span style="color:#5597d6;">use</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">tolerance</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">2</span><span style="color:#1f1f1f;">, </span><span style="color:#7f902a;">type</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">url-test</span><span style="color:#1f1f1f;">}
+
+</span><span style="color:#7f902a;">rules</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f8989;"># - AND,(AND,(DST-PORT,443),(NETWORK,UDP)),(NOT,((GEOSITE,cn))),REJECT # quic
+
+  </span><span style="color:#1f1f1f;">- </span><span style="color:#d07711;">MATCH,默认
+</span></code></pre>
+<p>里面有几个配置需要注意一下</p>
+<ul>
+<li>provider1 url 填入自己的订阅地址，如果有多个订阅可以自己加 provider</li>
+<li>dns 里的地址替换成自己 DNS 解析服务器的地址</li>
+<li>interface-name 设置为自己网卡的名称</li>
+<li>tun 的 device 名称为 utun</li>
+</ul>
+<p>继续把透明网关注册为系统服务并设置为开机自动启动</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;">sudo tee /etc/systemd/system/clash.service &gt; /dev/null &lt;&lt;EOF
+[Unit]
+Description=Clash daemon, A rule-based proxy in Go.
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/local/bin/clash -d /etc/clash
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable clash
+</span></code></pre>
+<p>透明网关我设置的 IP 地址为 <code>192.168.1.6</code></p>
+<h2 id="jing-tai-lu-you-biao">静态路由表</h2>
+<p>静态路由表使用 nchnroutes 项目实现，每天 5 点自动生成最新路由表并通过 BGP 传递给 ROS。</p>
+<p>安装 bird2</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;">apt update
+apt install bird2 -y
+</span></code></pre>
+<p>非本地 ip 表获取</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;">
+# 下载 ip 表
+wget https://raw.githubusercontent.com/haotianlPM/rosrbgprouter/main/iplist.sh
+# 赋予执行权限
+chmod +x iplist.sh
+# 执行一次
+./iplist.sh
+
+# 配置定时执行
+crontab -e
+0 5 * * * /bin/bash /home/iplist.sh
+</span></code></pre>
+<p>配置 bird2</p>
+<p>修改 <code>bird2</code> 配置文件为以下内容 ，文件在 <code>/etc/bird/bird.conf</code></p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;">
+log syslog all;
+
+router id 192.168.1.6;
+
+protocol device {
+    scan time 60;
+}
+
+protocol kernel {
+    ipv4 {
+        import none;
+        export all;
+    };
+}
+
+protocol static {
+    ipv4 {};
+    include &quot;routes4.conf&quot;;
+}
+
+protocol bgp {
+    local as 65531;
+    neighbor 192.168.1.1 as 65530;
+    source address 192.168.1.6;
+    ipv4 {
+        import none;
+        export all;
+    };
+}
+</span></code></pre>
+<p>注意修改上述的 IP 地址。<code>192.168.1.6</code> 为透明网关的地址，<code>192.168.1.1</code> 为 ROS 路由器的地址。</p>
+<p>查看 bird 执行状态</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;">systemctl status bird
+</span></code></pre><h2 id="she-zhi-ros">设置 ROS</h2>
+<p>ROS 分流有两种方式，一种是所有设备都可以分流，另一种是可以指定设备进行分流，这边我推荐后者。</p>
+<p>首先在 ROS 创建一个路由表，Routing → Tables，名字为 <code>bypass</code>，且勾选 FIB。</p>
+<p>然后打开 ROS 的终端，执行：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;"># 添加一条路由规则，距离为1，网关为pppoe-out1，路由表为bypass，注释为pass
+/ip route
+add distance=1 gateway=pppoe-out1 routing-table=bypass comment=pass
+
+# 添加一个BGP连接，名称为clash，本地角色为ebgp，远程地址为192.168.1.6，自治系统号为65531，路由表为bypass，路由器ID为192.168.1.1，自治系统号为65530，启用多跳选项
+/routing/bgp/connection
+add name=clash local.role=ebgp remote.address=192.168.1.6 .as=65531 routing-table=bypass router-id=192.168.1.1 as=65530 multihop=yes
+
+# 添加一个防火墙Mangle规则，动作为接受，链为prerouting，源地址为192.168.1.6
+/ip firewall mangle add action=accept chain=prerouting src-address=192.168.1.6
+</span></code></pre>
+<p>注意我的网关名称为 <code>pppoe-out1</code>，需要根据自己的实际设置修改名称。</p>
+<p>这个时候在 ROS 的 IP → Routes 里面就可以看到传过来的一大堆 ip 地址了</p>
+<p><img src="https://cdn.sa.net/2024/04/14/mAgqcY6SPwXT25e.webp" alt="image 2.png" /></p>
+<p>假设我有一个 ip 为 <code>192.168.1.100</code> 的设备想走分流，则需要继续设置：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;"># 添加一个地址列表，名称为proxy，包含地址 192.168.1.100
+/ip firewall address-list add list=proxy address=192.168.1.100
+
+# 添加一个防火墙Mangle规则，动作为标记路由，链为prerouting，源地址列表为proxy，连接类型tcp。目标端口为80和443，目标地址类型不是本地地址，新的路由标记为bypass
+/ip firewall mangle add action=mark-routing chain=prerouting src-address-list=proxy dst-port=80,443 dst-address-type=!local protocol=tcp new-routing-mark=bypass
+</span></code></pre>
+<p>这是 <code>192.168.1.100</code> 的设备就已经可以成功分流了。</p>
+<p>如果想继续添加其他分流设备，可以继续执行：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;"># 添加一个地址列表，名称为proxy，包含地址 192.168.1.101
+/ip firewall address-list add list=proxy address=192.168.1.101
+</span></code></pre>
+<p>或者直接通过可视化界面进行添加，在 IP → Firewall，选择 Address Lists 选项卡，这个时候能看到我们已经添加过的 IP，这个时候继续添加就行了。</p>
+<h2 id="qi-jian-yu-dao-de-yi-xie-wen-ti">期间遇到的一些问题</h2>
+<h3 id="ip-biao-wu-fa-tong-bu-dao-ros-li">IP 表无法同步到 ROS 里</h3>
+<p>当时定位这个问题甚至花费了 1 天的时候，Routing → BGP → Sessions 里面能正常看到设备，bird 执行 <code>birdc show protocols</code> 也显示正常，但是 ROS 里就是看不到同步的数据，最终才发现是我 clash 的配置里 tun 的设备名字不叫 utun 导致的，而下载的 ip 表是写的下一跳是 utun，而找不到设备导致无法同步。</p>
+<h2 id="shi-xian-gao-ke-yong">实现高可用</h2>
+<p>参考<a href="https://idndx.com/high-availability-when-split-routing-using-routeros-and-raspberrypi/">这篇文章</a>，整个系统创建好后，带来的问题就是 DNS 解析服务器的问题，因为我们所有的设备都会走 DNS 解析服务器，一旦 DNS 挂了大家就都不能上网了，所以需要实现故障检测功能，当 DNS 服务器挂了需要自动切换到 ROS 自己的 DNS 服务。</p>
+<p>具体的做法就是创建两条脚本，一条切换 DNS 地址为 <code>192.168.1.2</code>，另一条切换为运营商的递归 DNS 地址，比如 <code>114.114.114.114</code></p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;">/system/script
+add dont-require-permissions=yes name=use-paopao-dns source=\
+&quot;/ip/dns/set servers=192.168.0.2\
+\n/ip/dns/cache/flush&quot;
+add dont-require-permissions=yes name=use-ct-dns source=\
+&quot;/ip/dns/set servers=114.114.114.114\
+\n/ip/dns/cache/flush
+</span></code></pre>
+<p>这里的 <code>dont-require-permissions=yes</code> 是必须的，否则 <a href="https://wiki.mikrotik.com/wiki/Manual:Tools/Netwatch?ref=idndx.com">Netwatch</a> 执行的时候会报权限错误。</p>
+<p>然后配置 Netwatch 来检测 DNS 服务器的地址，如果宕机就自定执行脚本切换 DNS。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-shell" data-lang="shell"><span style="color:#1f1f1f;">/tool/netwatch
+add down-script=use-ct-dns host=192.168.1.2 interval=30s up-script=use-paopao-dns
+</span></code></pre><h2 id="te-bie-gan-xie-yi-xia-jiao-cheng">特别感谢以下教程</h2>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=eOr8yrp4KWk">ROS搭配Clash，彻底抛弃openwrt，配合无污染DNS进行IP分流</a></li>
+<li><a href="https://idndx.com/high-availability-when-split-routing-using-routeros-and-raspberrypi/">RouterOS 国内外分流环境下的网络高可用性设计</a></li>
+</ul>
+
+</div>
+
+
+
+<div class="fixed flex-col top-0 bottom-0 right-0 left-[calc((100%-48rem)/2+50rem)] items-center justify-center hidden xl:flex">
+  <nav class="docs-toc flex select-none items-center justify-center">
+    <nav>
+      <ul>
+        
+        <li><a data-id="shi-yao-shi-rbc" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/ros-rbc/#shi-yao-shi-rbc">什么是 RBC</a></li>
+        
+        
+        <li><a data-id="dns-jie-xi-fu-wu-qi" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/ros-rbc/#dns-jie-xi-fu-wu-qi">DNS 解析服务器</a></li>
+        
+        
+        <li><a data-id="tou-ming-wang-guan" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/ros-rbc/#tou-ming-wang-guan">透明网关</a></li>
+        
+        
+        <li><a data-id="jing-tai-lu-you-biao" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/ros-rbc/#jing-tai-lu-you-biao">静态路由表</a></li>
+        
+        
+        <li><a data-id="she-zhi-ros" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/ros-rbc/#she-zhi-ros">设置 ROS</a></li>
+        
+        
+        <li><a data-id="qi-jian-yu-dao-de-yi-xie-wen-ti" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/ros-rbc/#qi-jian-yu-dao-de-yi-xie-wen-ti">期间遇到的一些问题</a></li>
+        
+        <ul>
+          
+          <li><a data-id="ip-biao-wu-fa-tong-bu-dao-ros-li" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/ros-rbc/#ip-biao-wu-fa-tong-bu-dao-ros-li">IP 表无法同步到 ROS 里</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="shi-xian-gao-ke-yong" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/ros-rbc/#shi-xian-gao-ke-yong">实现高可用</a></li>
+        
+        
+        <li><a data-id="te-bie-gan-xie-yi-xia-jiao-cheng" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/ros-rbc/#te-bie-gan-xie-yi-xia-jiao-cheng">特别感谢以下教程</a></li>
+        
+        
+      </ul>
+    </nav>
+  </nav>
+</div>
+
+
+        </div>
+      </div>
+    </div>
+    
+<div class="mt-4 mb-6 flex flex-row items-center justify-center">
+  <svg id="loading" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block;" width="34px" height="34px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+    <defs>
+      <clipPath id="ldio-h4a348o36ew-cp">
+        <rect x="0" y="0" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;0;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="50;0;0;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+        <rect x="0" y="50" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="100;50;50;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;50;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+      </clipPath>
+    </defs>
+    <g transform="translate(50 50)"><g transform="scale(0.9)"><g transform="translate(-50 -50)">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" dur="2.2222222222222223s" repeatCount="indefinite" values="0 50 50;0 50 50;180 50 50;180 50 50;360 50 50" keyTimes="0;0.4;0.5;0.9;1"></animateTransform>
+        <path clip-path="url(#ldio-h4a348o36ew-cp)" fill="#5699d2" d="M54.864 50L54.864 50c0-1.291 0.689-2.412 1.671-2.729c9.624-3.107 17.154-12.911 19.347-25.296 c0.681-3.844-1.698-7.475-4.791-7.475H28.908c-3.093 0-5.472 3.631-4.791 7.475c2.194 12.385 9.723 22.189 19.347 25.296 c0.982 0.317 1.671 1.438 1.671 2.729v0c0 1.291-0.689 2.412-1.671 2.729C33.84 55.836 26.311 65.64 24.117 78.025 c-0.681 3.844 1.698 7.475 4.791 7.475h42.184c3.093 0 5.472-3.631 4.791-7.475C73.689 65.64 66.16 55.836 56.536 52.729 C55.553 52.412 54.864 51.291 54.864 50z"></path>
+        <path fill="#1d3f72" d="M81 81.5h-2.724l0.091-0.578c0.178-1.122 0.17-2.243-0.022-3.333C76.013 64.42 68.103 54.033 57.703 50.483l-0.339-0.116 v-0.715l0.339-0.135c10.399-3.552 18.31-13.938 20.642-27.107c0.192-1.089 0.2-2.211 0.022-3.333L78.276 18.5H81 c2.481 0 4.5-2.019 4.5-4.5S83.481 9.5 81 9.5H19c-2.481 0-4.5 2.019-4.5 4.5s2.019 4.5 4.5 4.5h2.724l-0.092 0.578 c-0.178 1.122-0.17 2.243 0.023 3.333c2.333 13.168 10.242 23.555 20.642 27.107l0.338 0.116v0.715l-0.338 0.135 c-10.4 3.551-18.31 13.938-20.642 27.106c-0.193 1.09-0.201 2.211-0.023 3.333l0.092 0.578H19c-2.481 0-4.5 2.019-4.5 4.5 s2.019 4.5 4.5 4.5h62c2.481 0 4.5-2.019 4.5-4.5S83.481 81.5 81 81.5z M73.14 81.191L73.012 81.5H26.988l-0.128-0.309 c-0.244-0.588-0.491-1.538-0.28-2.729c2.014-11.375 8.944-20.542 17.654-23.354c2.035-0.658 3.402-2.711 3.402-5.108 c0-2.398-1.368-4.451-3.403-5.108c-8.71-2.812-15.639-11.979-17.653-23.353c-0.211-1.191 0.036-2.143 0.281-2.731l0.128-0.308 h46.024l0.128 0.308c0.244 0.589 0.492 1.541 0.281 2.731c-2.015 11.375-8.944 20.541-17.654 23.353 c-2.035 0.658-3.402 2.71-3.402 5.108c0 2.397 1.368 4.45 3.403 5.108c8.71 2.812 15.64 11.979 17.653 23.354 C73.632 79.651 73.384 80.604 73.14 81.191z"></path>
+      </g>
+    </g></g></g>
+  </svg>
+  <div id="like-btn" class="text-gray-400 hidden rounded-full border border-gray-300 p-1 px-3 flex flex-row items-center gap-2 cursor-pointer disabled">
+    <p> 👍 </p>
+    <p class="text-sm hidden" id="like-count" style="display: block;"></p>
+  </div>
+</div>
+
+
+    <footer class="flex border-t border-gray-300 text-gray-600 bg-gray-50 items-center justify-center text-sm mt-1" translate="no">
+      <div class="flex flex-col inner justify-center items-center gap-2 pt-6 pb-4">
+        <p> Be curious. Read widely. Try new things. -- Aaron Swartz </p>
+        <p> alanlang.me@gmail.com </p>
+        <ul>
+          <li class="flex flex-row gap-2">
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/archives">Archives</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/categories">Categories</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/tags">Tags</a>
+          </li>
+        </ul>
+        <p><a class="underline" href="https:&#x2F;&#x2F;alanlang.me/atom.xml">RSS</a></p>
+        <p>2022 - Present</p>
+      </div>
+    </footer>
+  </div>
+  
+<script defer type="text/javascript" src="/assets/main.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta charset="utf-8">
+   
+  <meta name="site" content="https:&#x2F;&#x2F;alanlang.me">
+  <meta name="keywords" content="技术博客">
+  <meta name="description" content="alanlang 的技术博客">
+  <meta name="author" content="alanlang">
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  
+  <title>Alan&#x27;s Blog</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link href="/assets/main.css" rel="stylesheet">
+  
+<link rel="stylesheet" href="https://unpkg.com/cal-heatmap/dist/cal-heatmap.css">
+
+</head>
+
+<body class="flex flex-col min-h-full">
+  <nav class="flex justify-center items-center bg-zinc-700 py-2 " translate="no">
+    <div class="inner flex justify-center items-center sm:justify-between flex-col sm:flex-row mx-1">
+      <ul class="color-white flex flex-row justify-start gap-4">
+        <li><a class="nav-link opacity-90 text-2xl" href="https:&#x2F;&#x2F;alanlang.me">Alan&#x27;s Blog</a></li>
+      </ul>
+      <ul class="color-white flex flex-row gap-3 md:gap-4 items-center text-base">
+        <li> <a class="nav-link hidden" href="https:&#x2F;&#x2F;alanlang.me/books"> Books </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/codes"> Codes </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/research"> Research </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/practical"> Practical </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/now"> Now </a> </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="flex flex-col flex-grow">
+    <div class="flex justify-center flex-grow min-h-[calc(100vh-15rem)]">
+      <div class="inner mb-2">
+        <div class="mt-4 lg:mt-6">
+          
+<div class="h-[150px] grid place-items-center mt-2 w-full overflow-hidden">
+  <div id="cal-heatmap"></div>
+</div>
+<div class="prose lg:prose-xl max-w-full my-6">
+  <h2 id="jin-kuang">近况</h2>
+<ul>
+<li>👷 把博客再完善一下</li>
+<li>📚 <a href="https://book.douban.com/subject/36518892/">埃隆·马斯克传</a></li>
+<li>📚 <a href="https://book.douban.com/subject/36573581/">十日终嫣</a></li>
+<li>🧑‍💻 Dashboard 公共模块</li>
+<li>🧑‍💻 <a href="https://github.com/AlanLang/calendar">Calendar</a></li>
+<li>🎬 <a href="https://movie.douban.com/subject/35524249/">蓝眼武士第一季</a></li>
+<li>🎬 <a href="https://movie.douban.com/subject/36117913/">师兄啊师兄</a></li>
+<li>🍼 带娃</li>
+</ul>
+<h2 id="zhuang-bei">装备</h2>
+<ul>
+<li>📱 iPhone 13 mini</li>
+<li>💻 Mac Studio M2 Ultra 128GB</li>
+<li>🖥️ Dell U4021QW</li>
+<li>⌨️ Matrix Magic3 Edition 60%</li>
+<li>🖱️ Glorious Model O</li>
+<li>🎧 AirPods Pro</li>
+<li>📚 文石 BOOX Tab13</li>
+</ul>
+<h2 id="what-s-new">What’s new</h2>
+<ul>
+<li><code>2024-02-18</code> 增加装备栏目</li>
+<li><code>2024-01-18</code> 添加 <a href="https://alanlang.me/now">Now</a> 页面</li>
+</ul>
+
+</div>
+
+        </div>
+      </div>
+    </div>
+     
+    <footer class="flex border-t border-gray-300 text-gray-600 bg-gray-50 items-center justify-center text-sm mt-1" translate="no">
+      <div class="flex flex-col inner justify-center items-center gap-2 pt-6 pb-4">
+        <p> Be curious. Read widely. Try new things. -- Aaron Swartz </p>
+        <p> alanlang.me@gmail.com </p>
+        <ul>
+          <li class="flex flex-row gap-2">
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/archives">Archives</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/categories">Categories</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/tags">Tags</a>
+          </li>
+        </ul>
+        <p><a class="underline" href="https:&#x2F;&#x2F;alanlang.me/atom.xml">RSS</a></p>
+        <p>2022 - Present</p>
+      </div>
+    </footer>
+  </div>
+  
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/cal-heatmap/dist/cal-heatmap.min.js"></script>
+<script src="https://unpkg.com/@popperjs/core@2"></script>
+<script src="https://unpkg.com/cal-heatmap/dist/plugins/Tooltip.min.js"></script>
+<script>
+  fetch("/site").then(res => res.text()).then(res => {
+    let result = res;
+    if (result.endsWith("script>")) {
+      result = result.replace(/\r?\n?[^\r\n]*$/, "");
+    }
+    let blogInfo = JSON.parse(result);
+    const cal = new CalHeatmap();
+    const today = new Date();  // 获取今天的日期
+    const thirteenMonthsAgo = new Date(today.setMonth(today.getMonth() - 11)); // 计算13个月前的日期
+    // https://cal-heatmap.com/docs/showcase#github-profile-contribution-like
+    cal.paint({
+      range: 12,
+      scale: {
+        color: {
+          type: 'threshold',
+          range: ['#4dd05a','#37a446','#166b34','#14432a',],
+          domain: [100, 1000, 5000, 10000],
+        },
+      },
+      domain: {
+        type: 'month',
+        gutter: 2,
+        label: { text: 'MMM', textAlign: 'start', position: 'top' },
+      },
+      subDomain: { type: 'ghDay', radius: 2, width: 10, height: 10, gutter: 2 },
+      date: {
+        start: thirteenMonthsAgo,
+      },
+      data: { source: blogInfo.pages, x: "date", y: item => {
+        return parseInt(item.word_count);
+      }, groupY: 'sum' },
+    }, [
+    [
+      Tooltip,
+      {
+        text: function (date, value, dayjsDate) {
+          return (
+            (value ? value : 'No') +
+            ' words on ' +
+            dayjsDate.format('dddd, MMMM D, YYYY')
+          );
+        },
+      },
+    ],
+    ]);
+  });
+</script>
+
+</body>
+
+</html>

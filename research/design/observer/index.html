@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta charset="utf-8">
+  
+<meta name="site" content="https:&#x2F;&#x2F;alanlang.me&#x2F;research&#x2F;design&#x2F;observer&#x2F;">
+<meta name="keywords" content="code">
+<meta name="description" content="">
+<meta name="author" content="alanlang">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<!-- OG -->
+<meta property="og:image" content="">
+<meta property="og:description" content="">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="Alan&#x27;s Blog">
+<meta property="og:url" content="https:&#x2F;&#x2F;alanlang.me&#x2F;research&#x2F;design&#x2F;observer&#x2F;">
+<meta property="og:title" content="观察者模式 - Alan&#x27;s Blog">
+<meta property="twitter:partner" content="ogwp">
+<!-- /OG -->
+<!-- twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="观察者模式 - Alan&#x27;s Blog">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="">
+<!-- /twitter -->  
+
+  <title>观察者模式 - Alan&#x27;s Blog</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link href="/assets/main.css" rel="stylesheet">
+   
+</head>
+
+<body class="flex flex-col min-h-full">
+  <nav class="flex justify-center items-center bg-zinc-700 py-2 " translate="no">
+    <div class="inner flex justify-center items-center sm:justify-between flex-col sm:flex-row mx-1">
+      <ul class="color-white flex flex-row justify-start gap-4">
+        <li><a class="nav-link opacity-90 text-2xl" href="https:&#x2F;&#x2F;alanlang.me">Alan&#x27;s Blog</a></li>
+      </ul>
+      <ul class="color-white flex flex-row gap-3 md:gap-4 items-center text-base">
+        <li> <a class="nav-link hidden" href="https:&#x2F;&#x2F;alanlang.me/books"> Books </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/codes"> Codes </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/research"> Research </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/practical"> Practical </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/now"> Now </a> </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="flex flex-col flex-grow">
+    <div class="flex justify-center flex-grow min-h-[calc(100vh-15rem)]">
+      <div class="inner mb-2">
+        <div class="mt-4 lg:mt-6">
+          
+<h1 class="title font-medium text-2xl sm:text-3xl">
+  <a href="https:&#x2F;&#x2F;alanlang.me&#x2F;research&#x2F;design&#x2F;observer&#x2F;">
+      观察者模式
+  </a>
+</h1>
+<div class="flex gap-4 items-center my-1">
+ <time class="text-gray-500">2022-10-29</time>
+</div>
+<div class="prose lg:prose-xl max-w-full my-6">
+  <p>本文搬运自《Head First 设计模式》第二章</p>
+<h2 id="gong-zuo-he-yue">工作合约</h2>
+<blockquote>
+<p>工作合约
+恭喜贵公司获选为蔽公司建立下一代 Internet 气象观测站！该气象观测站必须建立在我们专利申请中的 WeatherData 对象上，由 WeatherData 对象负责追踪目前的天气状况（温度，适度，气压）。我们希望贵公司建立一个应用，有三种布告板，分别显示目前的状况，气象统计以及简单的预报。当 WeatherObject 对象获得最新的测量数据时，三种布告板必须时时更新。
+而且，这是一个可以扩展的气象站，Weather-O-Rama 气象站希望公布一组 API，好让其他开发人员可以写出自己的气象布告板，并插入此应用中。我们希望贵公司能够提供这样的 API。
+Weather-O-Rama 气象站有很好的商业运营模式：一旦客户上钩，他们使用每个布告板都要付钱。最好的部分就是，为了感觉贵公司建立此系统，我们将以公司的认股权支付你。
+我们期待看到你的设计和应用的 alpha 版本。
+真挚的
+Johnny Hurricane --- Weather-O-Rama 气象站执行长
+附注：我们正在通宵整理 WeatherData 源文件给你们</p>
+</blockquote>
+<h2 id="qi-xiang-jian-ce-ying-yong-de-gai-kuang">气象监测应用的概况</h2>
+<p>此系统中的三个部分是气象站（获取实际气象数据的物理装置），WeatherData 对象（追踪来自气象站的数据，并更新布告板）和布告板（显示目前天气状况给用户看）。
+<img src="https://vip2.loli.io/2022/10/29/qv1BOciVASH9I4u.png" alt="SCR-20221029-h6d.png" />
+瞧一瞧刚送到的 WeatherData 类
+如同他们所承诺的，隔天早上收到了 WeatherData 源文件，看了一下代码，一切都很直接：
+<img src="https://vip2.loli.io/2022/10/29/WeXyBJCDLHr9i86.png" alt="SCR-20221029-h7t.png" /></p>
+<h3 id="wo-men-mu-qian-zhi-dao-xie-shi-yao">我们目前知道些什么</h3>
+<ul>
+<li>WeatherData 类提供了三个 getter 方法，可以取得三个测量值：温度，湿度和气压。</li>
+<li>当新的测量数据备妥时，measurementsChanged() 方法就会被调用（我们不在乎这个方法是怎么被调用的，我们只在乎它被调用了）。</li>
+<li>我们需要实现三个使用天气数据的布告板：“目前状态”布告，“气象统计”布告，“天气预报”布告。一旦有新的测量，这个布告需要马上更新。</li>
+<li>此系统必须可扩展，让其他开发人员建立定制的布告板，用户可以随心所欲地添加或删除任何布告板。目前初始的布告板有三类：“目前状况”布告，“气象统计”布告，“天气预报”布告。</li>
+</ul>
+<h2 id="xian-kan-yi-ge-cuo-wu-shi-fan">先看一个错误示范</h2>
+<p>这是第一个可能的实现，我们依照 Weather-O- Rama 气象站开发人员的暗示，在 measurementsChanged() 方法中添加我们的代码：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">WeatherData </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">measurementsChanged</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#7f8989;">// 调用三个 get 方法，以取得最近的测量值。
+    </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">temp </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">getTemperature</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">humidity </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">getHumidity</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">pressure </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">getPressure</span><span style="color:#1f1f1f;">();
+
+    </span><span style="color:#7f8989;">// 现在，更新三个布告栏。
+    </span><span style="color:#5597d6;">currentConditionsDisplay</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pressure</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#5597d6;">statisticsDisplay</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pressure</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#5597d6;">forecastDisplay</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pressure</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#7f8989;">// 这里是其他 WeatherData 的方法
+</span><span style="color:#1f1f1f;">}
+</span></code></pre>
+<p>这样实现有什么问题：</p>
+<ul>
+<li>我们这是在针对实现编程，而非针对接口。</li>
+<li>对于每个新的布告板，我们都要修改代码。</li>
+<li>我们没有封装改变的部分。</li>
+<li>我们无法在运行时动态增加或删除布告栏。</li>
+</ul>
+<h2 id="ren-shi-guan-cha-zhe-mo-shi">认识观察者模式</h2>
+<p>我们看看报纸和杂志的订阅是怎么回事</p>
+<ol>
+<li>报社的业务就是出版报纸</li>
+<li>向某家报社订阅报纸，只要他们有新报纸出版，就会给你送来。只要你是他们的客户，你就会一直收到新报纸</li>
+<li>当你不想再看报纸时，取消订阅，他们就不会再送新报纸来</li>
+<li>只要报社还在运营，就会一直有人（或单位）向他们订阅报纸或取消订阅报纸</li>
+</ol>
+<h3 id="chu-ban-zhe-ding-yue-zhao-guan-cha-zhe-mo-shi">出版者 + 订阅着=观察者模式</h3>
+<p>如果你了解报纸订阅是怎么回事，其实就知道观察者模式是怎么回事，只是名称不太一样：出版者改称为“主题”（Subject），订阅者改称为“观察者”（Observer）。
+让我们来看得更仔细一点：
+<img src="https://vip2.loli.io/2022/10/29/TpIVt9nNuK4xOfj.png" alt="SCR-20221029-h9o.png" /></p>
+<h2 id="ding-yi-guan-cha-zhe-mo-shi">定义观察者模式</h2>
+<p>当你试图勾勒观察者模式时，可以利用报纸订阅服务，以你出版社和订阅者来比拟这一切。
+在真实世界中，你通常会看到观察者模式被定义成：
+&gt;观察者模式
+定义了对象之间一对多依赖，这样一来，当一个对象改变时，
+它的所有依赖者都会收到通知并自动更新。</p>
+<p><img src="https://vip2.loli.io/2022/10/29/AoDt8YMXu2OvCxE.png" alt="SCR-20221029-hae.png" /></p>
+<h3 id="song-ou-he-de-wei-li">松耦合的威力</h3>
+<p><strong>当两个对象之间松耦合，它们依然可以交互，但是不太清楚彼此的细节。
+观察者模式提供了一种对象设计，让主题和观察者之间松耦合。</strong>
+为什么呢？
+关于观察者的一切，主题只知道观察者实现了某个接口（Observer 接口）。主题不需要知道观察者的具体类是谁，做了什么或其他细节。
+任何时候我们都可以增加新的观察者。因为主题唯一依赖的东西是一个实现 Observer 接口的对象列表，所以我们可以随时增加观察者。事实上，在运行时我们可以用新的观察者取代现有观察者，主题不受任何影响。同样的，也可以在任何时候删除某个观察者。
+有新类型的观察者出现时，主题的代码不需要修改。假如我们有个新的具体类需要当观察者，我们不需要为了兼容新类型而修改主题的代码，所有要做的就是在新的类里实现此观察者接口，然后注册为观察者即可。主题不在乎别的，它只会发送通知给所有实现了观察者接口的对象。
+我们可以独立的复用主题或观察者。如果我们在其他地方需要使用主题和观察者，可以轻易的复用，因为二者并非紧耦合。
+改变主题或观察者其中一方，并不会影响另一方。因为两者是松耦合的，所以只要他们之间接口仍被遵守，我们就可以自由得改变他们而不会有任何问题。
+&gt;设计原则
+为了交互对象之间的松耦合设计而努力</p>
+<p><strong>松耦合的设计之所以能让我们建立有弹性的 OO 系统，能够应对变化，是因为对象之间的互相依赖降到了最低。</strong></p>
+<h2 id="wan-cheng-qi-xiang-zhan">完成气象站</h2>
+<h3 id="she-ji-qi-xiang-zhan">设计气象站</h3>
+<p><img src="https://vip2.loli.io/2022/10/29/KUW4iMCuv2Dcsmq.png" alt="SCR-20221029-hbq.png" /></p>
+<h3 id="shi-xian-qi-xiang-zhan">实现气象站</h3>
+<p>根据上面的 UML 图，我们要开始实现这个系统了。如果我们使用 Java 去实现，实际上在 java.util 包中已经内置了最基本的 Observer 接口与 Observable 类，这和我们的 Subject 接口 与 Observer 接口很相似。既然我们时前端开发那么我们就用 TS 去实现。
+所以，让我们从建立接口开始：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">export </span><span style="color:#668f14;">interface </span><span style="color:#c23f31;">Subject </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#c23f31;">registerObserver</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">o</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Observer</span><span style="color:#1f1f1f;">);
+  </span><span style="color:#c23f31;">removeObserver</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">o</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Observer</span><span style="color:#1f1f1f;">);
+  </span><span style="color:#c23f31;">notifyObservers</span><span style="color:#1f1f1f;">();
+}
+
+</span><span style="color:#72ab00;">export </span><span style="color:#668f14;">interface </span><span style="color:#c23f31;">Observer </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#c23f31;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pressure</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">);
+}
+
+</span><span style="color:#72ab00;">export </span><span style="color:#668f14;">interface </span><span style="color:#c23f31;">DisplayElement </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#c23f31;">display</span><span style="color:#1f1f1f;">();
+}
+</span></code></pre>
+<blockquote>
+<p>把观测值直接传入观察者中是更新状态最直接的方法。你认为这样做法明智吗？
+暗示：这些观测值的种类和个数在未来有可能改变吗？如果以后会改变，这些变化是否被很好得封装？</p>
+</blockquote>
+<p>别担心，在我们完成第一次实现后，我们会再回来探讨这个设计决策。</p>
+<h3 id="zai-weatherdata-zhong-shi-xian-zhu-ti-jie-kou">在 WeatherData 中实现主题接口</h3>
+<p>还记得我们在一开始试图实现的 WeatherData 类吗？我们现在要用观察者模式实现。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">WeatherData </span><span style="color:#668f14;">implements </span><span style="font-style:italic;color:#b06936;">Subject </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">observers</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Set</span><span style="color:#1f1f1f;">&lt;</span><span style="color:#c23f31;">Observer</span><span style="color:#1f1f1f;">&gt; </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">Set</span><span style="color:#1f1f1f;">();
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">temperature</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">humidity</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">pressure</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">registerObserver</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">o</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Observer</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">observers</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">add</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">o</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">removeObserver</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">o</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Observer</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#72ab00;">if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">observers</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">has</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">o</span><span style="color:#1f1f1f;">)) {
+      </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">observers</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">delete</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">o</span><span style="color:#1f1f1f;">);
+    }
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">notifyObservers</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">observers</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">forEach</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">observer</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+      </span><span style="color:#5597d6;">observer</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">temperature</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">humidity</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">pressure</span><span style="color:#1f1f1f;">);
+    });
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">measurementsChanged</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">notifyObservers</span><span style="color:#1f1f1f;">();
+  }
+
+  </span><span style="color:#7f8989;">/**
+   * 为了测试，模拟读取气象数据
+   */
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">setMeasurements</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pressure</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">temperature </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">temp</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">humidity </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">humidity</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">pressure </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">pressure</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">measurementsChanged</span><span style="color:#1f1f1f;">();
+  }
+}
+</span></code></pre><h3 id="xian-zai-wo-men-lai-jian-li-bu-gao-ban-ba">现在我们来建立布告板吧</h3>
+<p>我们已经把 WeatherData 类写出来了，现在轮到布告板了。Weather-O-Rama 气象站订购了三个布告板：目前状况布告板，统计布告板和预测布告板。我们先看看目前布告板。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#7f8989;">/**
+ * 目前状况布告板
+ */
+</span><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">CurrentConditionsDiaplay </span><span style="color:#668f14;">implements </span><span style="font-style:italic;color:#b06936;">Observer</span><span style="color:#1f1f1f;">, </span><span style="font-style:italic;color:#b06936;">DisplayElement </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">temperature</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">humidity</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#668f14;">public constructor</span><span style="color:#1f1f1f;">(</span><span style="color:#668f14;">private </span><span style="color:#5597d6;">weatherData</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Subject</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">registerObserver</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">temperature </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">temp</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">humidity </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">humidity</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">display</span><span style="color:#1f1f1f;">();
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">display</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(
+      </span><span style="color:#d07711;">`Current conditions: ${</span><span style="color:#acb3c2;">this</span><span style="color:#d07711;">.</span><span style="color:#acb3c2;">temperature</span><span style="color:#d07711;">}F degress and ${</span><span style="color:#acb3c2;">this</span><span style="color:#d07711;">.</span><span style="color:#acb3c2;">humidity</span><span style="color:#d07711;">}%humidity`
+    </span><span style="color:#1f1f1f;">);
+  }
+}
+</span></code></pre>
+<p>很方便，我们实现了另外两块布告板</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#7f8989;">/**
+ * 统计布告板
+ */
+</span><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">StatisticsDisplay </span><span style="color:#668f14;">implements </span><span style="font-style:italic;color:#b06936;">Observer</span><span style="color:#1f1f1f;">, </span><span style="font-style:italic;color:#b06936;">DisplayElement </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">tempSum </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">0</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">maxTemp </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">0</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">minTemp </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">200</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">numReadings </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">0</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#668f14;">public constructor</span><span style="color:#1f1f1f;">(</span><span style="color:#668f14;">private </span><span style="color:#5597d6;">weatherData</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Subject</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">registerObserver</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pressure</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">tempSum </span><span style="color:#72ab00;">+= </span><span style="color:#5597d6;">temp</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">numReadings</span><span style="color:#72ab00;">++</span><span style="color:#1f1f1f;">;
+
+    </span><span style="color:#72ab00;">if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp </span><span style="color:#72ab00;">&gt; </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">maxTemp</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">maxTemp </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">temp</span><span style="color:#1f1f1f;">;
+    }
+
+    </span><span style="color:#72ab00;">if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp </span><span style="color:#72ab00;">&lt; </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">minTemp</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">minTemp </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">temp</span><span style="color:#1f1f1f;">;
+    }
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">display</span><span style="color:#1f1f1f;">();
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">display</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(
+      </span><span style="color:#d07711;">&#39;Avg/Max/Min temperature = &#39; </span><span style="color:#72ab00;">+
+        </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">tempSum </span><span style="color:#72ab00;">/ </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">numReadings </span><span style="color:#72ab00;">+
+        </span><span style="color:#d07711;">&#39;/&#39; </span><span style="color:#72ab00;">+
+        </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">maxTemp </span><span style="color:#72ab00;">+
+        </span><span style="color:#d07711;">&#39;/&#39; </span><span style="color:#72ab00;">+
+        </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">minTemp
+    </span><span style="color:#1f1f1f;">);
+  }
+}
+</span></code></pre><pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#7f8989;">/**
+ * 预测布告板
+ */
+</span><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">ForecastDisplay </span><span style="color:#668f14;">implements </span><span style="font-style:italic;color:#b06936;">Observer</span><span style="color:#1f1f1f;">, </span><span style="font-style:italic;color:#b06936;">DisplayElement </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">currentPressure </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">29.92</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">lastPressure </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">0</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#668f14;">public constructor</span><span style="color:#1f1f1f;">(</span><span style="color:#668f14;">private </span><span style="color:#5597d6;">weatherData</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Subject</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">registerObserver</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pressure</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">lastPressure </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">currentPressure</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">currentPressure </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">pressure</span><span style="color:#1f1f1f;">;
+
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">display</span><span style="color:#1f1f1f;">();
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">display</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Forecast: &#39;</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#72ab00;">if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">currentPressure </span><span style="color:#72ab00;">&gt; </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">lastPressure</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Improving weather on the way!&#39;</span><span style="color:#1f1f1f;">);
+    } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">currentPressure </span><span style="color:#72ab00;">== </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">lastPressure</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;More of the same&#39;</span><span style="color:#1f1f1f;">);
+    } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">currentPressure </span><span style="color:#72ab00;">&lt; </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">lastPressure</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Watch out for cooler, rainy weather&#39;</span><span style="color:#1f1f1f;">);
+    }
+  }
+}
+
+</span></code></pre><h3 id="qi-dong-qi-xiang-zhan">启动气象站</h3>
+<h4 id="xian-jian-li-yi-ge-ce-shi-cheng-xu">先建立一个测试程序</h4>
+<p>气象站已经完成得差不多了，我们还需要一些代码将一切连接在一起：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">WeatherStation </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">main</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">weatherData </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">WeatherData</span><span style="color:#1f1f1f;">();
+
+    </span><span style="color:#72ab00;">new </span><span style="color:#c23f31;">CurrentConditionsDiaplay</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#72ab00;">new </span><span style="color:#c23f31;">StatisticsDisplay</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#72ab00;">new </span><span style="color:#c23f31;">ForecastDisplay</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">);
+
+    </span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">setMeasurements</span><span style="color:#1f1f1f;">(</span><span style="color:#b3933a;">80</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">65</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">30.4</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">setMeasurements</span><span style="color:#1f1f1f;">(</span><span style="color:#b3933a;">82</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">70</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">29.2</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">setMeasurements</span><span style="color:#1f1f1f;">(</span><span style="color:#b3933a;">78</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">90</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">29.2</span><span style="color:#1f1f1f;">);
+  }
+}
+</span></code></pre><h4 id="yun-xing-cheng-xu">运行程序</h4>
+<p><img src="https://vip2.loli.io/2022/10/29/KVD3TSu29xHtpGs.png" alt="image.png" /></p>
+<h4 id="xin-xu-qiu-jia-ru-ku-re-zhi-shu-bu-gao-ban">新需求：加入酷热指数布告板</h4>
+<p>刚刚接到气象站来电通知，他们还需要酷热指数布告板，而我们实现起来也很容易，之前涉及的代码完全不需要改动什么，只需要新建一个类就可以了：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#7f8989;">/**
+ * 酷热指数布告板
+ */
+</span><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">HeatIndexDisplay </span><span style="color:#668f14;">implements </span><span style="font-style:italic;color:#b06936;">Observer</span><span style="color:#1f1f1f;">, </span><span style="font-style:italic;color:#b06936;">DisplayElement </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">private </span><span style="color:#5597d6;">heatIndex </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">0</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#668f14;">public constructor</span><span style="color:#1f1f1f;">(</span><span style="color:#668f14;">private </span><span style="color:#5597d6;">weatherData</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Subject</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">weatherData</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">registerObserver</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pressure</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">heatIndex </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">computeHeatIndex</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">temp</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">humidity</span><span style="color:#1f1f1f;">);
+
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">display</span><span style="color:#1f1f1f;">();
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">display</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Heat index is &#39; </span><span style="color:#72ab00;">+ </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">heatIndex</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#668f14;">private </span><span style="color:#c23f31;">computeHeatIndex</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">rh</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">number</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#72ab00;">return </span><span style="color:#1f1f1f;">(
+      </span><span style="color:#b3933a;">16.923 </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">0.185212 </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">5.37941 </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">-
+      </span><span style="color:#b3933a;">0.100254 </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">0.00941695 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">0.00728898 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">0.000345372 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">-
+      </span><span style="color:#b3933a;">0.000814971 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">0.0000102102 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">-
+      </span><span style="color:#b3933a;">0.000038646 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">0.0000291583 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">0.00000142721 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">0.000000197483 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">-
+      </span><span style="color:#b3933a;">0.0000000218429 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">+
+      </span><span style="color:#b3933a;">0.000000000843296 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">) </span><span style="color:#72ab00;">-
+      </span><span style="color:#b3933a;">0.0000000000481975 </span><span style="color:#72ab00;">* </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">t </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh </span><span style="color:#72ab00;">* </span><span style="color:#5597d6;">rh</span><span style="color:#1f1f1f;">)
+    );
+  }
+}
+</span></code></pre><h3 id="zai-kan-gang-cai-de-na-ge-she-ji-jue-ce">再看刚才的那个设计决策</h3>
+<p>我们可以看一下 java.uitl.Observer 是怎么做的：
+它也有一个 update 方法，但是方法签名不太一样</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-java" data-lang="java"><span style="color:#5597d6;">update</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">Observable</span><span style="color:#1f1f1f;"> o, </span><span style="color:#a2a001;">Object</span><span style="color:#1f1f1f;"> arg)
+</span></code></pre>
+<p>这样做就比较灵活了，
+主题本身当作第一个个变量，好让观察者知道是哪个主题通知它的。
+第二个参数是具体的数据对象，这样就能做到通用。
+感兴趣的同学可以用最新的设计方式重构上面的实现。</p>
+<h2 id="ben-zhang-yao-dian">本章要点</h2>
+<ul>
+<li>观察者模式定义了对象之间一对多的关系</li>
+<li>主题（也就是可观察者）用一个共同的接口来更新观察者</li>
+<li>观察者和可观察者之间用松耦合的方式结合（loosecoupling)，可观察者不知道观察者的细节，只知道观察者实现了观察者接口。</li>
+</ul>
+<h2 id="ben-zhang-yuan-ma">本章源码</h2>
+<p>https://stackblitz.com/edit/typescript-e4kru2?file=index.ts</p>
+
+</div>
+
+
+
+<div class="fixed flex-col top-0 bottom-0 right-0 left-[calc((100%-48rem)/2+50rem)] items-center justify-center hidden xl:flex">
+  <nav class="docs-toc flex select-none items-center justify-center">
+    <nav>
+      <ul>
+        
+        <li><a data-id="gong-zuo-he-yue" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#gong-zuo-he-yue">工作合约</a></li>
+        
+        
+        <li><a data-id="qi-xiang-jian-ce-ying-yong-de-gai-kuang" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#qi-xiang-jian-ce-ying-yong-de-gai-kuang">气象监测应用的概况</a></li>
+        
+        <ul>
+          
+          <li><a data-id="wo-men-mu-qian-zhi-dao-xie-shi-yao" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#wo-men-mu-qian-zhi-dao-xie-shi-yao">我们目前知道些什么</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="xian-kan-yi-ge-cuo-wu-shi-fan" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#xian-kan-yi-ge-cuo-wu-shi-fan">先看一个错误示范</a></li>
+        
+        
+        <li><a data-id="ren-shi-guan-cha-zhe-mo-shi" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#ren-shi-guan-cha-zhe-mo-shi">认识观察者模式</a></li>
+        
+        <ul>
+          
+          <li><a data-id="chu-ban-zhe-ding-yue-zhao-guan-cha-zhe-mo-shi" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#chu-ban-zhe-ding-yue-zhao-guan-cha-zhe-mo-shi">出版者 + 订阅着=观察者模式</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="ding-yi-guan-cha-zhe-mo-shi" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#ding-yi-guan-cha-zhe-mo-shi">定义观察者模式</a></li>
+        
+        <ul>
+          
+          <li><a data-id="song-ou-he-de-wei-li" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#song-ou-he-de-wei-li">松耦合的威力</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="wan-cheng-qi-xiang-zhan" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#wan-cheng-qi-xiang-zhan">完成气象站</a></li>
+        
+        <ul>
+          
+          <li><a data-id="she-ji-qi-xiang-zhan" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#she-ji-qi-xiang-zhan">设计气象站</a></li>
+          
+          <li><a data-id="shi-xian-qi-xiang-zhan" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#shi-xian-qi-xiang-zhan">实现气象站</a></li>
+          
+          <li><a data-id="zai-weatherdata-zhong-shi-xian-zhu-ti-jie-kou" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#zai-weatherdata-zhong-shi-xian-zhu-ti-jie-kou">在 WeatherData 中实现主题接口</a></li>
+          
+          <li><a data-id="xian-zai-wo-men-lai-jian-li-bu-gao-ban-ba" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#xian-zai-wo-men-lai-jian-li-bu-gao-ban-ba">现在我们来建立布告板吧</a></li>
+          
+          <li><a data-id="qi-dong-qi-xiang-zhan" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#qi-dong-qi-xiang-zhan">启动气象站</a></li>
+          
+          <li><a data-id="zai-kan-gang-cai-de-na-ge-she-ji-jue-ce" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#zai-kan-gang-cai-de-na-ge-she-ji-jue-ce">再看刚才的那个设计决策</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="ben-zhang-yao-dian" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#ben-zhang-yao-dian">本章要点</a></li>
+        
+        
+        <li><a data-id="ben-zhang-yuan-ma" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/observer/#ben-zhang-yuan-ma">本章源码</a></li>
+        
+        
+      </ul>
+    </nav>
+  </nav>
+</div>
+
+
+        </div>
+      </div>
+    </div>
+    
+<div class="mt-4 mb-6 flex flex-row items-center justify-center">
+  <svg id="loading" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block;" width="34px" height="34px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+    <defs>
+      <clipPath id="ldio-h4a348o36ew-cp">
+        <rect x="0" y="0" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;0;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="50;0;0;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+        <rect x="0" y="50" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="100;50;50;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;50;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+      </clipPath>
+    </defs>
+    <g transform="translate(50 50)"><g transform="scale(0.9)"><g transform="translate(-50 -50)">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" dur="2.2222222222222223s" repeatCount="indefinite" values="0 50 50;0 50 50;180 50 50;180 50 50;360 50 50" keyTimes="0;0.4;0.5;0.9;1"></animateTransform>
+        <path clip-path="url(#ldio-h4a348o36ew-cp)" fill="#5699d2" d="M54.864 50L54.864 50c0-1.291 0.689-2.412 1.671-2.729c9.624-3.107 17.154-12.911 19.347-25.296 c0.681-3.844-1.698-7.475-4.791-7.475H28.908c-3.093 0-5.472 3.631-4.791 7.475c2.194 12.385 9.723 22.189 19.347 25.296 c0.982 0.317 1.671 1.438 1.671 2.729v0c0 1.291-0.689 2.412-1.671 2.729C33.84 55.836 26.311 65.64 24.117 78.025 c-0.681 3.844 1.698 7.475 4.791 7.475h42.184c3.093 0 5.472-3.631 4.791-7.475C73.689 65.64 66.16 55.836 56.536 52.729 C55.553 52.412 54.864 51.291 54.864 50z"></path>
+        <path fill="#1d3f72" d="M81 81.5h-2.724l0.091-0.578c0.178-1.122 0.17-2.243-0.022-3.333C76.013 64.42 68.103 54.033 57.703 50.483l-0.339-0.116 v-0.715l0.339-0.135c10.399-3.552 18.31-13.938 20.642-27.107c0.192-1.089 0.2-2.211 0.022-3.333L78.276 18.5H81 c2.481 0 4.5-2.019 4.5-4.5S83.481 9.5 81 9.5H19c-2.481 0-4.5 2.019-4.5 4.5s2.019 4.5 4.5 4.5h2.724l-0.092 0.578 c-0.178 1.122-0.17 2.243 0.023 3.333c2.333 13.168 10.242 23.555 20.642 27.107l0.338 0.116v0.715l-0.338 0.135 c-10.4 3.551-18.31 13.938-20.642 27.106c-0.193 1.09-0.201 2.211-0.023 3.333l0.092 0.578H19c-2.481 0-4.5 2.019-4.5 4.5 s2.019 4.5 4.5 4.5h62c2.481 0 4.5-2.019 4.5-4.5S83.481 81.5 81 81.5z M73.14 81.191L73.012 81.5H26.988l-0.128-0.309 c-0.244-0.588-0.491-1.538-0.28-2.729c2.014-11.375 8.944-20.542 17.654-23.354c2.035-0.658 3.402-2.711 3.402-5.108 c0-2.398-1.368-4.451-3.403-5.108c-8.71-2.812-15.639-11.979-17.653-23.353c-0.211-1.191 0.036-2.143 0.281-2.731l0.128-0.308 h46.024l0.128 0.308c0.244 0.589 0.492 1.541 0.281 2.731c-2.015 11.375-8.944 20.541-17.654 23.353 c-2.035 0.658-3.402 2.71-3.402 5.108c0 2.397 1.368 4.45 3.403 5.108c8.71 2.812 15.64 11.979 17.653 23.354 C73.632 79.651 73.384 80.604 73.14 81.191z"></path>
+      </g>
+    </g></g></g>
+  </svg>
+  <div id="like-btn" class="text-gray-400 hidden rounded-full border border-gray-300 p-1 px-3 flex flex-row items-center gap-2 cursor-pointer disabled">
+    <p> 👍 </p>
+    <p class="text-sm hidden" id="like-count" style="display: block;"></p>
+  </div>
+</div>
+
+
+    <footer class="flex border-t border-gray-300 text-gray-600 bg-gray-50 items-center justify-center text-sm mt-1" translate="no">
+      <div class="flex flex-col inner justify-center items-center gap-2 pt-6 pb-4">
+        <p> Be curious. Read widely. Try new things. -- Aaron Swartz </p>
+        <p> alanlang.me@gmail.com </p>
+        <ul>
+          <li class="flex flex-row gap-2">
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/archives">Archives</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/categories">Categories</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/tags">Tags</a>
+          </li>
+        </ul>
+        <p><a class="underline" href="https:&#x2F;&#x2F;alanlang.me/atom.xml">RSS</a></p>
+        <p>2022 - Present</p>
+      </div>
+    </footer>
+  </div>
+  
+<script defer type="text/javascript" src="/assets/main.js"></script>
+
+</body>
+
+</html>

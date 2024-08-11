@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta charset="utf-8">
+  
+<meta name="site" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;openwrt&#x2F;">
+<meta name="keywords" content="工具,硬件">
+<meta name="description" content="">
+<meta name="author" content="alanlang">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<!-- OG -->
+<meta property="og:image" content="">
+<meta property="og:description" content="">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="Alan&#x27;s Blog">
+<meta property="og:url" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;openwrt&#x2F;">
+<meta property="og:title" content="OpenWrt 旁路由的设置与使用 - Alan&#x27;s Blog">
+<meta property="twitter:partner" content="ogwp">
+<!-- /OG -->
+<!-- twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OpenWrt 旁路由的设置与使用 - Alan&#x27;s Blog">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="">
+<!-- /twitter -->  
+
+  <title>OpenWrt 旁路由的设置与使用 - Alan&#x27;s Blog</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link href="/assets/main.css" rel="stylesheet">
+   
+</head>
+
+<body class="flex flex-col min-h-full">
+  <nav class="flex justify-center items-center bg-zinc-700 py-2 " translate="no">
+    <div class="inner flex justify-center items-center sm:justify-between flex-col sm:flex-row mx-1">
+      <ul class="color-white flex flex-row justify-start gap-4">
+        <li><a class="nav-link opacity-90 text-2xl" href="https:&#x2F;&#x2F;alanlang.me">Alan&#x27;s Blog</a></li>
+      </ul>
+      <ul class="color-white flex flex-row gap-3 md:gap-4 items-center text-base">
+        <li> <a class="nav-link hidden" href="https:&#x2F;&#x2F;alanlang.me/books"> Books </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/codes"> Codes </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/research"> Research </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/practical"> Practical </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/now"> Now </a> </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="flex flex-col flex-grow">
+    <div class="flex justify-center flex-grow min-h-[calc(100vh-15rem)]">
+      <div class="inner mb-2">
+        <div class="mt-4 lg:mt-6">
+          
+<h1 class="title font-medium text-2xl sm:text-3xl">
+  <a href="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;openwrt&#x2F;">
+      OpenWrt 旁路由的设置与使用
+  </a>
+</h1>
+<div class="flex gap-4 items-center my-1">
+ <time class="text-gray-500">2023-04-23</time>
+</div>
+<div class="prose lg:prose-xl max-w-full my-6">
+  <h2 id="bian-yi">编译</h2>
+<p>推荐直接使用 <a href="https://github.com/coolsnowwolf/lede">lede</a> 的固件，有很详细的编译教程。
+同时可以借助 <a href="https://github.com/VIKINGYFY/OpenWRT-CI">OpenWRT-CI</a> 使用 GitHub Action 来进行编译。
+或者直接下载别人编译后的固件使用。</p>
+<h2 id="zai-pve-zhong-an-zhuang">在 PVE 中安装</h2>
+<p>选中PVE节点，点击“创建虚拟机”，填写虚拟机名称（例如Openwrt），然后点击下一步
+<img src="https://vip2.loli.io/2023/04/23/OsT5D1ePdiISlX4.png" alt="" />
+CD/DVD选择“不适用任何介质”，操作系统和版本默认即可，点击“下一步”。
+<img src="https://vip2.loli.io/2023/04/23/ST9MLsVEdnftDRy.png" alt="" />
+系统选项卡全部默认，点击“下一步”。
+<img src="https://vip2.loli.io/2023/04/23/aGT8IoQbpwLcnHA.png" alt="" />
+硬盘不用改，之后会删除，然后用刚刚上传的 img 镜像创建虚拟磁盘。
+<img src="https://vip2.loli.io/2023/04/23/eTrEyzXiNnPLdM1.png" alt="" />
+CPU核心数量按需添加，一般双核足够了。
+<img src="https://vip2.loli.io/2023/04/23/dLPO8F26MrSgmcw.png" alt="" />
+内存 256MB 以上都是够的，系统有富余就多加一点，一般不用超高 2GB，点击“下一步”
+<img src="https://vip2.loli.io/2023/04/23/4mejZ1rGsw5x9IM.png" alt="" />
+网络设置先保持默认既可
+<img src="https://vip2.loli.io/2023/04/23/IfmEuktKzH8g6TP.png" alt="" />
+最后确认信息，点击完成
+<img src="https://vip2.loli.io/2023/04/23/lrdhZfDvL6g4nNb.png" alt="image" />
+分离不用的硬盘：选择刚刚创建的“Openwrt”虚拟机 &gt;  硬件 &gt; 硬盘(scsi0) &gt; 点击“分离”。
+<img src="https://vip2.loli.io/2023/04/23/GlBVW6JejLOYQpa.png" alt="image" />
+删除不用的硬盘和光驱：选中“未使用的磁盘0”，点击“删除”；再用同样的方法删除不用的光驱。
+<img src="https://vip2.loli.io/2023/04/23/TimZQGSlBOeCUpy.png" alt="image" />
+接下来我们上传镜像文件，由于 OpenWrt 固件默认文件名称很长，为了方便后续的操作，我们将其重命名为 lede.img.gz
+然后解压文件</p>
+<pre style="background-color:#f5f5f5;">
+<code><span style="color:#1f1f1f;">gunzip lede.img.gz
+</span></code></pre>
+<p>得到 lede.img，将其上传到 PVE 中备用。
+<img src="https://vip2.loli.io/2023/04/23/2kT7L6GYecwXV9a.png" alt="" />
+同时记录下文件上传的地址
+<img src="https://vip2.loli.io/2023/04/23/ShBIqWyc6AwGxfm.png" alt="image" />
+把镜像转成虚拟磁盘并导入到虚拟机：选择“pve”节点 &gt; shell &gt; 输入以下命令并回车：</p>
+<pre style="background-color:#f5f5f5;">
+<code><span style="color:#1f1f1f;">qm importdisk 105 /var/lib/vz/template/iso/lede.img local-lvm
+</span></code></pre>
+<p>其中 105 为虚拟机的编号，后面为刚才记录的镜像地址
+shell会显示虚拟磁盘创建的进度，最后显示‘Successfully imported disk as 'unused0:local-lvm:vm-105-disk-0'就是添加成功了。
+<img src="https://vip2.loli.io/2023/04/23/K9C4HSEAh7np83t.png" alt="image" />
+导入成功后在‘Openwrt’虚拟机的“硬件”选项卡就能看到一个“未使用的磁盘0”，选中它点击编辑，弹出配置窗口，设备类型选“sata”，最后点击添加。
+<img src="https://vip2.loli.io/2023/04/23/fpGECPoYVK1Jz95.png" alt="image" />
+切换到虚拟机的“选项”选项卡，设置引导顺序。
+<img src="https://vip2.loli.io/2023/04/23/TgYKXH6SJOWCPbe.png" alt="image" />
+最后启动 OpenWrt 软路由虚拟机，然后修改 ip 地址既可</p>
+<pre style="background-color:#f5f5f5;">
+<code><span style="color:#1f1f1f;">vi /ect/config/network
+</span></code></pre><h2 id="zai-shi-ti-ying-jian-zhong-an-zhuang">在实体硬件中安装</h2>
+<h3 id="an-zhuang-qian-zhun-bei">安装前准备</h3>
+<ul>
+<li>软路由硬件</li>
+<li>OpenWrt 固件</li>
+<li>带 WePE 启动 U 盘</li>
+<li>physdiskwrite.exe 写盘工具</li>
+</ul>
+<p>将 OpenWrt 固件与 physdiskwrite.exe 工具拷贝至启动U盘，以作备用。</p>
+<h3 id="jin-ru-wepe-jie-mian">进入 WePE 界面</h3>
+<p>将启动 U 盘插到软路由上，启动后进入 BIOS 设置，将启动U盘设置为第一启动项，进入到WePE界面。</p>
+<h3 id="xie-ru-openwrt-xi-tong">写入 OpenWrt 系统</h3>
+<p>打开 U 盘中 OpenWrt 与 <a href="https://m0n0.ch/wall/physdiskwrite.php">physdiskwrite.exe</a> 所在的文件夹，在窗口输入cmd，进入命令行界面。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#7f8989;"># 1.physdiskwrite使用格式如下：
+# physdiskwrite.exe -u [openwrt固件名称]，本例应输入如下命令：
+</span><span style="color:#5597d6;">physdiskwrite.exe -u</span><span style="color:#1f1f1f;"> openwrt-19.07.7-x86-64-combined-squashfs.img.gz
+</span><span style="color:#7f8989;"># 2.回车确认执行，会提示选择哪硬盘进行安装，我的软路由只有一个硬盘，所以输入“0”即可
+# 3.根据提示输入“yes”进行写盘操作
+# 4.写入完成，拔下U盘，进行重启即可。
+</span></code></pre><h2 id="pei-zhi-pang-lu-you">配置旁路由</h2>
+<p>我们设定主路由的 ip 地址为：192.168.1.1
+旁路由的 ip 地址为：192.168.1.2</p>
+<h3 id="she-zhi-jie-kou">设置接口</h3>
+<p>如果需要后面让 AdGuard Home 接管 DNS，那么这边的 DNS 留空即可。
+<img src="https://vip2.loli.io/2023/04/24/cKEZDdVGQ19O4fm.png" alt="" /></p>
+<h3 id="guan-bi-dhcp">关闭 DHCP</h3>
+<p>因为是作为旁路由使用，所以需要关闭 DHCP 服务。
+<img src="https://vip2.loli.io/2023/04/24/JStMjYv7B68Dy4H.png" alt="" /></p>
+<h3 id="xiu-gai-fang-huo-qiang">修改防火墙</h3>
+<p><img src="https://vip2.loli.io/2023/04/24/fLk19XqB6dpojM3.png" alt="" /></p>
+<h2 id="shi-yong-pang-lu-you">使用旁路由</h2>
+<p>在联网设备上，设置网关为 192.168.1.2，DNS 为 192.168.1.2 即可。
+或者修改主路由的 DHCP，自动配置网关和 DNS 为 192.168.1.2</p>
+<h2 id="tuo-zhan-wan-fa">拓展玩法</h2>
+<ul>
+<li><a href="https://alanlang.me/archives/ros%E8%B7%AF%E7%94%B1%E5%99%A8%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97#%E4%B8%8Eopenwrt%E6%97%81%E8%B7%AF%E7%94%B1%E9%85%8D%E5%90%88">利用 VRRP 和 ROS 主路由配合</a></li>
+<li><a href="https://github.com/vernesong/OpenClash/discussions/1420">OpenClash 配合 AdGuard Home 使用</a></li>
+</ul>
+
+</div>
+
+
+
+
+        </div>
+      </div>
+    </div>
+    
+<div class="mt-4 mb-6 flex flex-row items-center justify-center">
+  <svg id="loading" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block;" width="34px" height="34px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+    <defs>
+      <clipPath id="ldio-h4a348o36ew-cp">
+        <rect x="0" y="0" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;0;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="50;0;0;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+        <rect x="0" y="50" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="100;50;50;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;50;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+      </clipPath>
+    </defs>
+    <g transform="translate(50 50)"><g transform="scale(0.9)"><g transform="translate(-50 -50)">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" dur="2.2222222222222223s" repeatCount="indefinite" values="0 50 50;0 50 50;180 50 50;180 50 50;360 50 50" keyTimes="0;0.4;0.5;0.9;1"></animateTransform>
+        <path clip-path="url(#ldio-h4a348o36ew-cp)" fill="#5699d2" d="M54.864 50L54.864 50c0-1.291 0.689-2.412 1.671-2.729c9.624-3.107 17.154-12.911 19.347-25.296 c0.681-3.844-1.698-7.475-4.791-7.475H28.908c-3.093 0-5.472 3.631-4.791 7.475c2.194 12.385 9.723 22.189 19.347 25.296 c0.982 0.317 1.671 1.438 1.671 2.729v0c0 1.291-0.689 2.412-1.671 2.729C33.84 55.836 26.311 65.64 24.117 78.025 c-0.681 3.844 1.698 7.475 4.791 7.475h42.184c3.093 0 5.472-3.631 4.791-7.475C73.689 65.64 66.16 55.836 56.536 52.729 C55.553 52.412 54.864 51.291 54.864 50z"></path>
+        <path fill="#1d3f72" d="M81 81.5h-2.724l0.091-0.578c0.178-1.122 0.17-2.243-0.022-3.333C76.013 64.42 68.103 54.033 57.703 50.483l-0.339-0.116 v-0.715l0.339-0.135c10.399-3.552 18.31-13.938 20.642-27.107c0.192-1.089 0.2-2.211 0.022-3.333L78.276 18.5H81 c2.481 0 4.5-2.019 4.5-4.5S83.481 9.5 81 9.5H19c-2.481 0-4.5 2.019-4.5 4.5s2.019 4.5 4.5 4.5h2.724l-0.092 0.578 c-0.178 1.122-0.17 2.243 0.023 3.333c2.333 13.168 10.242 23.555 20.642 27.107l0.338 0.116v0.715l-0.338 0.135 c-10.4 3.551-18.31 13.938-20.642 27.106c-0.193 1.09-0.201 2.211-0.023 3.333l0.092 0.578H19c-2.481 0-4.5 2.019-4.5 4.5 s2.019 4.5 4.5 4.5h62c2.481 0 4.5-2.019 4.5-4.5S83.481 81.5 81 81.5z M73.14 81.191L73.012 81.5H26.988l-0.128-0.309 c-0.244-0.588-0.491-1.538-0.28-2.729c2.014-11.375 8.944-20.542 17.654-23.354c2.035-0.658 3.402-2.711 3.402-5.108 c0-2.398-1.368-4.451-3.403-5.108c-8.71-2.812-15.639-11.979-17.653-23.353c-0.211-1.191 0.036-2.143 0.281-2.731l0.128-0.308 h46.024l0.128 0.308c0.244 0.589 0.492 1.541 0.281 2.731c-2.015 11.375-8.944 20.541-17.654 23.353 c-2.035 0.658-3.402 2.71-3.402 5.108c0 2.397 1.368 4.45 3.403 5.108c8.71 2.812 15.64 11.979 17.653 23.354 C73.632 79.651 73.384 80.604 73.14 81.191z"></path>
+      </g>
+    </g></g></g>
+  </svg>
+  <div id="like-btn" class="text-gray-400 hidden rounded-full border border-gray-300 p-1 px-3 flex flex-row items-center gap-2 cursor-pointer disabled">
+    <p> 👍 </p>
+    <p class="text-sm hidden" id="like-count" style="display: block;"></p>
+  </div>
+</div>
+
+
+    <footer class="flex border-t border-gray-300 text-gray-600 bg-gray-50 items-center justify-center text-sm mt-1" translate="no">
+      <div class="flex flex-col inner justify-center items-center gap-2 pt-6 pb-4">
+        <p> Be curious. Read widely. Try new things. -- Aaron Swartz </p>
+        <p> alanlang.me@gmail.com </p>
+        <ul>
+          <li class="flex flex-row gap-2">
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/archives">Archives</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/categories">Categories</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/tags">Tags</a>
+          </li>
+        </ul>
+        <p><a class="underline" href="https:&#x2F;&#x2F;alanlang.me/atom.xml">RSS</a></p>
+        <p>2022 - Present</p>
+      </div>
+    </footer>
+  </div>
+  
+<script defer type="text/javascript" src="/assets/main.js"></script>
+
+</body>
+
+</html>

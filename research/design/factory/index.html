@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta charset="utf-8">
+  
+<meta name="site" content="https:&#x2F;&#x2F;alanlang.me&#x2F;research&#x2F;design&#x2F;factory&#x2F;">
+<meta name="keywords" content="code">
+<meta name="description" content="">
+<meta name="author" content="alanlang">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<!-- OG -->
+<meta property="og:image" content="">
+<meta property="og:description" content="">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="Alan&#x27;s Blog">
+<meta property="og:url" content="https:&#x2F;&#x2F;alanlang.me&#x2F;research&#x2F;design&#x2F;factory&#x2F;">
+<meta property="og:title" content="工厂模式 - Alan&#x27;s Blog">
+<meta property="twitter:partner" content="ogwp">
+<!-- /OG -->
+<!-- twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="工厂模式 - Alan&#x27;s Blog">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="">
+<!-- /twitter -->  
+
+  <title>工厂模式 - Alan&#x27;s Blog</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link href="/assets/main.css" rel="stylesheet">
+   
+</head>
+
+<body class="flex flex-col min-h-full">
+  <nav class="flex justify-center items-center bg-zinc-700 py-2 " translate="no">
+    <div class="inner flex justify-center items-center sm:justify-between flex-col sm:flex-row mx-1">
+      <ul class="color-white flex flex-row justify-start gap-4">
+        <li><a class="nav-link opacity-90 text-2xl" href="https:&#x2F;&#x2F;alanlang.me">Alan&#x27;s Blog</a></li>
+      </ul>
+      <ul class="color-white flex flex-row gap-3 md:gap-4 items-center text-base">
+        <li> <a class="nav-link hidden" href="https:&#x2F;&#x2F;alanlang.me/books"> Books </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/codes"> Codes </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/research"> Research </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/practical"> Practical </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/now"> Now </a> </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="flex flex-col flex-grow">
+    <div class="flex justify-center flex-grow min-h-[calc(100vh-15rem)]">
+      <div class="inner mb-2">
+        <div class="mt-4 lg:mt-6">
+          
+<h1 class="title font-medium text-2xl sm:text-3xl">
+  <a href="https:&#x2F;&#x2F;alanlang.me&#x2F;research&#x2F;design&#x2F;factory&#x2F;">
+      工厂模式
+  </a>
+</h1>
+<div class="flex gap-4 items-center my-1">
+ <time class="text-gray-500">2022-12-04</time>
+</div>
+<div class="prose lg:prose-xl max-w-full my-6">
+  <h2 id="dang-kan-dao-new-jiu-hui-xiang-dao-ju-ti">当看到 new 就会想到 具体</h2>
+<p>是的，当使用 new 时，的确是在实例化一个具体类，所以用的的确是实现，而不是接口。我们已经知道了代码绑定具体类会导致代码更脆弱，更缺乏弹性。
+<img src="https://vip2.loli.io/2022/12/04/zUKPHWkwL2ct3GE.png" alt="" />
+当有一群相关的具体类时，通常会写出这样的代码：
+<img src="https://vip2.loli.io/2022/12/04/jQet9GBr8uzH5Uq.png" alt="" />
+当看到这样的代码，一旦有变化或扩展，就必须重新打开这段代码进行检查和修改。通常这样修改过的代码将造成部分系统更难维护和更新，也更容易犯错。</p>
+<h2 id="new-you-shi-yao-bu-dui-jing">new 有什么不对劲？</h2>
+<p>在技术上，new 没有错，毕竟这是面向对象编程的基础部分。真正的凡人是我们老朋友“改变”，以及它是如何影响 new 的使用的。
+针对接口编程，可以隔离掉以后系统可能发生的一大堆改变。为什么？如果代码是针对接口而写，那么通过多态，它可以与任何新类实现该接口。但是，当代码使用大量的具体类时，等于是自找麻烦，因为一旦加入新的具体类，就必须改变代码。也就是说，你的代码并非“对修改关闭”。想用新的具体类型来拓展代码，就必须重新打开它。
+所以该怎么办呢？当遇到这样的问题时，就应该回到 OO 设计原则去寻找线索。别忘了，我们的第一个原则就是用来处理改变，并帮助我们“找出会变化的方面，把它们从不变的部分分离出来”。</p>
+<h2 id="shi-bie-bian-hua-de-fang-mian">识别变化的方面</h2>
+<p>假设我们要实现一个披萨店
+<img src="https://vip2.loli.io/2022/12/04/J1OlDuEBp7APv5y.png" alt="J1OlDuEBp7APv5y" /></p>
+<h3 id="dan-shi-ni-xu-yao-geng-duo-pi-sa-lei-xing">但是你需要更多披萨类型</h3>
+<p>我们必须增加一些代码，来“决定”适合的披萨类型，然后在“制造”这个披萨。
+<img src="https://vip2.loli.io/2022/12/04/QFqBEyW6bpmvswD.png" alt="QFqBEyW6bpmvswD" /></p>
+<h3 id="dan-shi-ya-li-lai-zi-yuan-geng-duo-de-pi-sa-lei-xing">但是压力来自远更多的披萨类型</h3>
+<p>比如我们要更新我们的披萨菜单，要新增几个披萨类型，然后移除几个已有的披萨。
+<img src="https://vip2.loli.io/2022/12/04/CWFpPtBw1e2YmIE.png" alt="CWFpPtBw1e2YmIE" />
+很明显的，如果实例化“某些”具体类，将使 orderPizza 出现问题，而且也无法让 orderPizza 对修改关闭。但是，现在我们已经知道哪些会改变，哪些不会改变，该是时候使用封装的时候了。</p>
+<h3 id="feng-zhuang-chuang-jian-dui-xiang-de-dai-ma">封装创建对象的代码</h3>
+<p>现在最好将创建对象移动到 orderPizza 之外：
+<img src="https://vip2.loli.io/2022/12/04/xeFoUNS5QADyT6C.png" alt="xeFoUNS5QADyT6C" />
+<strong>我们称这个新对象为“工厂”</strong>
+工厂（factory）处理创建对象的细节。</p>
+<h3 id="jian-li-yi-ge-jian-dan-pi-sa-gong-han">建立一个简单披萨工厂</h3>
+<p>先从工厂本身开始，我们定义一个类，为所有披萨封装创建对象的代码。代码像这样......
+<img src="https://vip2.loli.io/2022/12/04/pBtof8nCvL6s7S5.png" alt="pBtof8nCvL6s7S5" />
+这样我们就可以改造刚才的代码了
+<img src="https://vip2.loli.io/2022/12/04/jS5VZFEetdGMasR.png" alt="jS5VZFEetdGMasR" /></p>
+<h2 id="ding-yi-jian-dan-gong-han">定义简单工厂</h2>
+<p>简单工厂并不是一个设计模式，反而比较像是一种编程习惯。有些开发人员的确是把这个编程习惯误认为是“工厂模式”。但是不要因为简单工厂不是一个“真正的”模式，就忽略了它的用法。让我们来看看新的披萨店类图。
+<img src="https://vip2.loli.io/2022/12/04/1qDOG6UxoCPuBm3.png" alt="1qDOG6UxoCPuBm3" />
+谢谢简单工厂来为我们暖身。接下来登场的是两个重量级的模式，它们都是工厂。
+但是别担心，未来还有更多的披萨！</p>
+<h2 id="jia-meng-pi-sa-dian">加盟披萨店</h2>
+<p>现在披萨店经营有成，好多地方想加盟我们的披萨店，但是由于不同的地方的披萨做的都有大大小小的差异，所以我们希望建立一个框架，把加盟店和创建披萨绑在一起的同时又保持一定的弹性。</p>
+<h3 id="gei-pi-sa-dian-shi-yong-de-kuang-jia">给披萨店使用的框架</h3>
+<p>我们把 createPiza 方法放回到 PizzaStore 中，不过要把它设置成“抽象方法”，然后为每个地区创造一个 PizzaStore 的子类。
+首先，看看 PizzaStore 所做的改变：
+<img src="https://vip2.loli.io/2022/12/04/gVwkZ8zvLcN4TQH.png" alt="gVwkZ8zvLcN4TQH" />
+现在已有一个 PizzaStore 作为超类；让每个区域（NYPizzaStore，ChicagoPizzaStore，CaliforniaPizzaStore）都继承这个 PizzaStore，每个子类各自决定如何制造披萨。让我们看看这要如何运行。
+<img src="https://vip2.loli.io/2022/12/04/BUkKTDYpPl9z2sF.png" alt="BUkKTDYpPl9z2sF" /></p>
+<h3 id="rang-wo-men-kai-yi-jia-jia-meng-dian-ba">让我们开一家加盟店吧</h3>
+<p>开加盟店有它的好处，可以从 PizzaStore 免费取得所有的功能。区域店只需要继承 PizzaStore，然后提供 createPizza() 方法实现自己的披萨风味即可。
+这是纽约风味：
+<img src="https://vip2.loli.io/2022/12/04/Js1khuWpQFweIbn.png" alt="Js1khuWpQFweIbn" /></p>
+<h2 id="gong-han-fang-fa-mo-shi">工厂方法模式</h2>
+<p>我们可以看到刚才的设计，我们把原本由一个对象负责所有具体类的实例化，现在通过对 PizzaStore 做一些转变，编程由一群子类负责实例化。工厂方法模式（Factory Method Pattern）通过让子类决定该创建的对象是什么，来达到对象创建的过程封装的目的。让我们来看看这些类图，以了解由哪些组成元素：
+创建者（creator）类
+<img src="https://vip2.loli.io/2022/12/04/UfNwlJBqcLPXDQj.png" alt="UfNwlJBqcLPXDQj" />
+产品类
+<img src="https://vip2.loli.io/2022/12/04/eW4ukNFazjEwn25.png" alt="eW4ukNFazjEwn25" /></p>
+<h3 id="ding-yi-gong-han-fang-fa-mo-shi">定义工厂方法模式</h3>
+<blockquote>
+<p>工厂方法模式 定义了一个创建对象的接口，但由子类决定要实例化的类是哪一个。
+工厂方法让类把实例化推迟到子类。</p>
+</blockquote>
+<p><img src="https://vip2.loli.io/2022/12/04/P7boq4vLMHCIQjf.png" alt="P7boq4vLMHCIQjf" /></p>
+<h2 id="yi-ge-hen-yi-lai-de-pi-sa-dian">一个很依赖的披萨店</h2>
+<p>假设我们从来没有听说过工厂模式，下面是一个不使用工厂模式的披萨店。数一数，这个类所依赖的具体披萨对象有几种。如果又加了一种加州风味披萨到这个披萨店中，那么届时又会依赖几个对象？</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-typescript" data-lang="typescript"><span style="color:#1f1f1f;">
+</span><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">DependentPizzaStore </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">createPizza</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">style</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">string</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">type</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">string</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#668f14;">let </span><span style="color:#5597d6;">pizza</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Pizza </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">null</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#72ab00;">if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">style </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;NY&#39;</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#72ab00;">if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">type </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;cheese&#39;</span><span style="color:#1f1f1f;">) {
+        </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">NYCheesePizza</span><span style="color:#1f1f1f;">();
+      } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">type </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;veggie&#39;</span><span style="color:#1f1f1f;">) {
+        </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">NYVeggiePizza</span><span style="color:#1f1f1f;">();
+      } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">type </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;clam&#39;</span><span style="color:#1f1f1f;">) {
+        </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">NYClamPizza</span><span style="color:#1f1f1f;">();
+      } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">type </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;pepperoni&#39;</span><span style="color:#1f1f1f;">) {
+        </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">NYPepperoniPizza</span><span style="color:#1f1f1f;">();
+      }
+    } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;Chicago&#39;</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#72ab00;">if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">type </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;cheese&#39;</span><span style="color:#1f1f1f;">) {
+        </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">ChicagoCheesePizza</span><span style="color:#1f1f1f;">();
+      } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">type </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;veggie&#39;</span><span style="color:#1f1f1f;">) {
+        </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">ChicagoVeggiePizza</span><span style="color:#1f1f1f;">();
+      } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">type </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;clam&#39;</span><span style="color:#1f1f1f;">) {
+        </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">ChicagoClamPizza</span><span style="color:#1f1f1f;">();
+      } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">type </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;pepperoni&#39;</span><span style="color:#1f1f1f;">) {
+        </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">ChicagoPepperoniPizza</span><span style="color:#1f1f1f;">();
+      }
+    }
+
+    </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">prepare</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">bake</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">cut</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">box</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">;
+  }
+}
+</span></code></pre><h3 id="kan-kan-dui-xiang-yi-lai">看看对象依赖</h3>
+<p>当你直接实例化一个对象时，就是在依赖它的具体类。看看上面这个依赖性很高的披萨店的例子，它由披萨店类来创建所有的披萨对象，而不是委托给工厂。
+<img src="https://vip2.loli.io/2022/12/04/wxtcHviIsCVnA6p.png" alt="wxtcHviIsCVnA6p" /></p>
+<h3 id="yi-lai-dao-zhi-yuan-ze">依赖倒置原则</h3>
+<p>很清楚的，代码里减少对于具体类的依赖是件好事。事实上，还一个 OO 设计原则就正式阐明了这一点，这个原则设置还有一个响亮又正式的名字：依赖倒置原则（Dependency Inversion Principle）。</p>
+<blockquote>
+<p>设计原则
+要依赖抽象，不要依赖具体类。</p>
+</blockquote>
+<p>即：不能让高层组件依赖低层组件，而且，不管高层或低层组件，两者都应该依赖于抽象。</p>
+<h3 id="yuan-ze-de-ying-yong">原则的应用</h3>
+<p>非常依赖披萨店的主要问题在于：它依赖每个披萨的类型。因为它是在自己的 orderPizza() 方法中，实例化这些具体类的。虽然我们已经创建了一个抽象，也就是 Pizza，但是我们仍在代码中，实际地创建了具体的 Pizza，所以，这个抽象没什么影响力。
+而应用工厂方法之后，依赖关系就变成了这样：
+<img src="https://vip2.loli.io/2022/12/04/miN9aMxbRQrS7uY.png" alt="miN9aMxbRQrS7uY" /></p>
+<h3 id="yi-lai-dao-zhi-yuan-ze-jiu-jing-dao-zhi-zai-liao-na-li">依赖倒置原则，究竟倒置在了哪里？</h3>
+<p>在依赖倒置原则中的倒置指的是和一般 OO 设计的思考方式完全相反。看上面的两个图，你会注意到低层组件现在竟然依赖高层组件的抽象。同样的，高层组件现在也依赖相同的抽象。之前第一张图的依赖图是自上而下的，现在却倒置了，而且高层与低层代码现在都依赖这个抽象。</p>
+<h2 id="kai-shi-ba-kong-pi-sa-dian-de-yuan-liao">开始把控披萨店的原料</h2>
+<p>披萨店开的很成功，为了进一步把控质量，我们现在需要控制每家披萨店的原料。现在唯一的问题就是加盟店坐落在不同的区域，不同区域的相同披萨对应的原料是不一致的，那么我们该怎么解决这个问题？</p>
+<h3 id="da-jian-yuan-liao-gong-han">搭建原料工厂</h3>
+<p>现在，我们要建造一个工厂来生产原料，这个工厂负责创建所有区域店披萨的每一种原料。也就是说，工厂将需要生产面团，酱料，芝士等。等会儿，你就知道如何处理各个区域的差异来。
+开始先为工厂定义一个接口，这个接口负责创建所有的原料：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-typescript" data-lang="typescript"><span style="color:#72ab00;">export </span><span style="color:#668f14;">interface </span><span style="color:#c23f31;">PizzaIngredientFactory </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#c23f31;">createDough</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Dough</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#c23f31;">createSauce</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Sauce</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#c23f31;">createCheese</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Cheese</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#c23f31;">createVeggies</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Veggies</span><span style="color:#1f1f1f;">[];
+  </span><span style="color:#c23f31;">createPepperoni</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Pepperoni</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#c23f31;">createClam</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Clams</span><span style="color:#1f1f1f;">;
+}
+</span></code></pre>
+<p>要做的事情是：</p>
+<ol>
+<li>为每个区域建造一个工厂。你需要创建一个继承自 PizzaIngredientFactory 的子类来实现每一个创建方法。</li>
+<li>实现一组原料类供工厂使用，例如 ReggianoCheese，RedPeppers，ThickCrustDough。这些类可以在合适的区域内使用。</li>
+<li>然后你仍然需要将这一切组合起来，将新的原料工厂整合进旧的 PizzaStore 代码中。</li>
+</ol>
+<h3 id="chuang-jian-niu-yue-yuan-liao-gong-han">创建纽约原料工厂</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-typescript" data-lang="typescript"><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">NYPizzaIngredientFactory </span><span style="color:#668f14;">implements </span><span style="font-style:italic;color:#b06936;">PizzaIngredientFactory </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">createDough</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Dough </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#72ab00;">return new </span><span style="color:#c23f31;">ThinCrustDough</span><span style="color:#1f1f1f;">();
+  }
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">createSauce</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Sauce </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#72ab00;">return new </span><span style="color:#c23f31;">MarinaraSauce</span><span style="color:#1f1f1f;">();
+  }
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">createCheese</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Cheese </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#72ab00;">return new </span><span style="color:#c23f31;">ReggianoCheese</span><span style="color:#1f1f1f;">();
+  }
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">createVeggies</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Veggies</span><span style="color:#1f1f1f;">[] {
+    </span><span style="color:#72ab00;">return </span><span style="color:#1f1f1f;">[</span><span style="color:#72ab00;">new </span><span style="color:#c23f31;">Garlic</span><span style="color:#1f1f1f;">(), </span><span style="color:#72ab00;">new </span><span style="color:#c23f31;">Onion</span><span style="color:#1f1f1f;">(), </span><span style="color:#72ab00;">new </span><span style="color:#c23f31;">Mushroom</span><span style="color:#1f1f1f;">(), </span><span style="color:#72ab00;">new </span><span style="color:#c23f31;">RedPepper</span><span style="color:#1f1f1f;">()];
+  }
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">createPepperoni</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Pepperoni </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#72ab00;">return new </span><span style="color:#c23f31;">SlicedPepperoni</span><span style="color:#1f1f1f;">();
+  }
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">createClam</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Clams </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#72ab00;">return new </span><span style="color:#c23f31;">FreshClams</span><span style="color:#1f1f1f;">();
+  }
+}
+</span></code></pre><h3 id="zhong-zuo-pi-sa">重做披萨</h3>
+<p>工厂已经一切就绪，准备生产高质量原料了，现在我们只需要重做披萨，好让它们只使用工厂生产出来的原料，我们先从抽象的 Pizza 类开始：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-typescript" data-lang="typescript"><span style="color:#72ab00;">export </span><span style="color:#668f14;">abstract class </span><span style="color:#c23f31;">Pizza </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">public </span><span style="color:#5597d6;">name</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">string</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">public </span><span style="color:#5597d6;">dough</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Dough</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">public </span><span style="color:#5597d6;">sauce</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Sauce</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">public </span><span style="color:#5597d6;">veggies</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Veggies</span><span style="color:#1f1f1f;">[];
+  </span><span style="color:#668f14;">public </span><span style="color:#5597d6;">cheese</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Cheese</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">public </span><span style="color:#5597d6;">pepperoni</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Pepperoni</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">public </span><span style="color:#5597d6;">clam</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Clams</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#668f14;">public abstract </span><span style="color:#c23f31;">prepare</span><span style="color:#1f1f1f;">()</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">void</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">bake</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Bake for 25 minutes at 350&#39;</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">cut</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Cutting the pizza into diagonal slices&#39;</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">box</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Place pizza in official PizzaStore box&#39;</span><span style="color:#1f1f1f;">);
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">getName</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">name</span><span style="color:#1f1f1f;">;
+  }
+}
+</span></code></pre>
+<ul>
+<li>每个披萨都持有一组在准备时会用到的原料。</li>
+<li>现在把 prepare() 方法声明成抽象。在这个方法中，我们需要收集披萨所需的原料，而这些原料当然来自于原料工厂。</li>
+<li>其他的方法保持不变，只要 prepare() 方法需要改变。</li>
+</ul>
+<p>具体的 Pizza 则是这样：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-typescript" data-lang="typescript"><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">CheesePizza </span><span style="color:#668f14;">extends </span><span style="font-style:italic;color:#b06936;">Pizza </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">public </span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">PizzaIngredientFactory</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#668f14;">public constructor</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">PizzaIngredientFactory</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">super</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">ingredientFactory </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">;
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">prepare</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">`Preparing ${</span><span style="color:#acb3c2;">this</span><span style="color:#d07711;">.</span><span style="color:#a2a001;">name</span><span style="color:#d07711;">}`</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">dough </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">createDough</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">sauce </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">createSauce</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">cheese </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">createCheese</span><span style="color:#1f1f1f;">();
+  }
+}
+</span></code></pre>
+<ul>
+<li>要制作披萨，需要工厂提供原料。所以每个披萨类都需要从构造函数参数中得到一个工厂，并把这个工厂存在一个实例变量中。</li>
+<li>prepare() 方法一步一步地创建芝士披萨，每当需要原料时，就跟工厂要。</li>
+</ul>
+<p>同样可以在实现一个蛤蜊披萨</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-typescript" data-lang="typescript"><span style="color:#72ab00;">export </span><span style="color:#668f14;">class </span><span style="color:#c23f31;">ClamPizza </span><span style="color:#668f14;">extends </span><span style="font-style:italic;color:#b06936;">Pizza </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">public </span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">PizzaIngredientFactory</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#668f14;">public constructor</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">PizzaIngredientFactory</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#5597d6;">super</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">ingredientFactory </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">;
+  }
+
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">prepare</span><span style="color:#1f1f1f;">() {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">`Preparing ${</span><span style="color:#acb3c2;">this</span><span style="color:#d07711;">.</span><span style="color:#a2a001;">name</span><span style="color:#d07711;">}`</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">dough </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">createDough</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">sauce </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">createSauce</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">cheese </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">createCheese</span><span style="color:#1f1f1f;">();
+    </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clam </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">createClam</span><span style="color:#1f1f1f;">();
+  }
+}
+</span></code></pre>
+<p><a name="PLSzk"></a></p>
+<h3 id="zai-xiu-gai-pi-sa-dian-de-shi-xian">再修改披萨店的实现</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-typescript" data-lang="typescript"><span style="color:#668f14;">class </span><span style="color:#c23f31;">NYPizzaStore </span><span style="color:#668f14;">extends </span><span style="font-style:italic;color:#b06936;">PizzaStore </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">public </span><span style="color:#c23f31;">createPizza</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">item</span><span style="color:#72ab00;">: </span><span style="color:#a2a001;">string</span><span style="color:#1f1f1f;">)</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Pizza </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#668f14;">let </span><span style="color:#5597d6;">pizza</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">Pizza </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">null</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">ingredientFactory </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">NYPizzaIngredientFactory</span><span style="color:#1f1f1f;">();
+
+    </span><span style="color:#72ab00;">if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">item </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;cheese&#39;</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">NYCheesePizza</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">);
+      </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">setName</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;New York Style Cheese Pizza&#39;</span><span style="color:#1f1f1f;">);
+    } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">item </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;veggie&#39;</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">NYVeggiePizza</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">);
+      </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">setName</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;New York Style Veggie Pizza&#39;</span><span style="color:#1f1f1f;">);
+    } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">item </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;clam&#39;</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">NYClamPizza</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">);
+      </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">setName</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;New York Style Clam Pizza&#39;</span><span style="color:#1f1f1f;">);
+    } </span><span style="color:#72ab00;">else if </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">item </span><span style="color:#72ab00;">=== </span><span style="color:#d07711;">&#39;pepperoni&#39;</span><span style="color:#1f1f1f;">) {
+      </span><span style="color:#5597d6;">pizza </span><span style="color:#72ab00;">= new </span><span style="color:#c23f31;">NYPepperoniPizza</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">ingredientFactory</span><span style="color:#1f1f1f;">);
+      </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">setName</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;New York Style Pepperoni Pizza&#39;</span><span style="color:#1f1f1f;">);
+    }
+
+    </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">pizza</span><span style="color:#1f1f1f;">;
+  }
+}
+</span></code></pre>
+<ul>
+<li>纽约店会用到纽约披萨原料工厂，由该工厂负责生产所有纽约风味披萨所需的原料</li>
+<li>把工厂传递给每一个披萨，以便于披萨能从工厂中获取原料</li>
+</ul>
+<h3 id="wo-men-zuo-liao-shi-yao">我们做了什么？</h3>
+<p>一连串的代码改变，我们到底做了什么？<br />我们引入新的类型的工厂，也就是所谓的抽象工厂，来创建披萨原料<br />通过抽象工厂所提供的接口，可以创建原料，利用这个接口书写代码，我的的代码从实际工厂中解耦，以便在不同的上下文中实现各式各样的工厂，制造出各种不同的产品。<br />因为代码从实际的产品中解耦了，所以我们可以替换不同的工厂来取得不同的行为。</p>
+<h2 id="ding-yi-chou-xiang-gong-han-mo-shi">定义抽象工厂模式</h2>
+<p>我们又在模式家族里新增了另一种工厂模式，这个模式可以创建产品的家族。看看这个模式的正式定义：
+&gt;<strong>抽象工厂模式</strong><br />提个一个接口，用于创建相关或依赖对象的家族，而不需要明确指定具体类。</p>
+<p>抽象工厂允许客户使用抽象的接口来创造一组相关的产品，而不需要知道实际产出的具体产品是什么。这样一来，客户就从具体的产品中被解耦。
+<img src="https://vip2.loli.io/2022/12/04/Ix9viQkcYo1mDR4.png" alt="Ix9viQkcYo1mDR4" /></p>
+<h2 id="bi-jiao-gong-han-fang-fa-he-chou-xiang-gong-han">比较工厂方法和抽象工厂</h2>
+<h3 id="gong-han-fang-fa">工厂方法</h3>
+<p><img src="https://vip2.loli.io/2022/12/04/4jsEfydSFgILvNq.png" alt="4jsEfydSFgILvNq" /></p>
+<h3 id="chou-xiang-gong-han">抽象工厂</h3>
+<p><img src="https://vip2.loli.io/2022/12/04/RJ5w4jLOWTYvikV.png" alt="RJ5w4jLOWTYvikV" /></p>
+<h2 id="yao-dian">要点</h2>
+<ul>
+<li>所有的工厂都是用来封装对象的创建</li>
+<li>简单工厂，虽然不是真正的设计模式，但仍不失为一个简单的方法，可以将客户程序从具体类中解耦</li>
+<li>工厂方法使用继承：把对象的创建委托给子类，子类实现工厂方法来创建对象</li>
+<li>抽象工厂使用对象组合：对象的创建被实现在工厂接口所暴露出来的方法中</li>
+<li>所有工厂模式都通过减少应用程序和具体类之间的依赖促进松耦合</li>
+<li>工厂方法允许类将实例化延迟到子类进行</li>
+<li>抽象工厂创建相关的对象家族，而不需要依赖它们的具体类</li>
+<li>依赖倒置原则，指导我们避免依赖具体类，而要尽量依赖抽象</li>
+<li>工厂是很有威力的技巧，帮助我们针对抽象编程，而不要针对具体类编程</li>
+</ul>
+
+</div>
+
+
+
+<div class="fixed flex-col top-0 bottom-0 right-0 left-[calc((100%-48rem)/2+50rem)] items-center justify-center hidden xl:flex">
+  <nav class="docs-toc flex select-none items-center justify-center">
+    <nav>
+      <ul>
+        
+        <li><a data-id="dang-kan-dao-new-jiu-hui-xiang-dao-ju-ti" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#dang-kan-dao-new-jiu-hui-xiang-dao-ju-ti">当看到 new 就会想到 具体</a></li>
+        
+        
+        <li><a data-id="new-you-shi-yao-bu-dui-jing" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#new-you-shi-yao-bu-dui-jing">new 有什么不对劲？</a></li>
+        
+        
+        <li><a data-id="shi-bie-bian-hua-de-fang-mian" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#shi-bie-bian-hua-de-fang-mian">识别变化的方面</a></li>
+        
+        <ul>
+          
+          <li><a data-id="dan-shi-ni-xu-yao-geng-duo-pi-sa-lei-xing" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#dan-shi-ni-xu-yao-geng-duo-pi-sa-lei-xing">但是你需要更多披萨类型</a></li>
+          
+          <li><a data-id="dan-shi-ya-li-lai-zi-yuan-geng-duo-de-pi-sa-lei-xing" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#dan-shi-ya-li-lai-zi-yuan-geng-duo-de-pi-sa-lei-xing">但是压力来自远更多的披萨类型</a></li>
+          
+          <li><a data-id="feng-zhuang-chuang-jian-dui-xiang-de-dai-ma" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#feng-zhuang-chuang-jian-dui-xiang-de-dai-ma">封装创建对象的代码</a></li>
+          
+          <li><a data-id="jian-li-yi-ge-jian-dan-pi-sa-gong-han" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#jian-li-yi-ge-jian-dan-pi-sa-gong-han">建立一个简单披萨工厂</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="ding-yi-jian-dan-gong-han" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#ding-yi-jian-dan-gong-han">定义简单工厂</a></li>
+        
+        
+        <li><a data-id="jia-meng-pi-sa-dian" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#jia-meng-pi-sa-dian">加盟披萨店</a></li>
+        
+        <ul>
+          
+          <li><a data-id="gei-pi-sa-dian-shi-yong-de-kuang-jia" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#gei-pi-sa-dian-shi-yong-de-kuang-jia">给披萨店使用的框架</a></li>
+          
+          <li><a data-id="rang-wo-men-kai-yi-jia-jia-meng-dian-ba" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#rang-wo-men-kai-yi-jia-jia-meng-dian-ba">让我们开一家加盟店吧</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="gong-han-fang-fa-mo-shi" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#gong-han-fang-fa-mo-shi">工厂方法模式</a></li>
+        
+        <ul>
+          
+          <li><a data-id="ding-yi-gong-han-fang-fa-mo-shi" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#ding-yi-gong-han-fang-fa-mo-shi">定义工厂方法模式</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="yi-ge-hen-yi-lai-de-pi-sa-dian" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#yi-ge-hen-yi-lai-de-pi-sa-dian">一个很依赖的披萨店</a></li>
+        
+        <ul>
+          
+          <li><a data-id="kan-kan-dui-xiang-yi-lai" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#kan-kan-dui-xiang-yi-lai">看看对象依赖</a></li>
+          
+          <li><a data-id="yi-lai-dao-zhi-yuan-ze" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#yi-lai-dao-zhi-yuan-ze">依赖倒置原则</a></li>
+          
+          <li><a data-id="yuan-ze-de-ying-yong" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#yuan-ze-de-ying-yong">原则的应用</a></li>
+          
+          <li><a data-id="yi-lai-dao-zhi-yuan-ze-jiu-jing-dao-zhi-zai-liao-na-li" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#yi-lai-dao-zhi-yuan-ze-jiu-jing-dao-zhi-zai-liao-na-li">依赖倒置原则，究竟倒置在了哪里？</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="kai-shi-ba-kong-pi-sa-dian-de-yuan-liao" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#kai-shi-ba-kong-pi-sa-dian-de-yuan-liao">开始把控披萨店的原料</a></li>
+        
+        <ul>
+          
+          <li><a data-id="da-jian-yuan-liao-gong-han" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#da-jian-yuan-liao-gong-han">搭建原料工厂</a></li>
+          
+          <li><a data-id="chuang-jian-niu-yue-yuan-liao-gong-han" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#chuang-jian-niu-yue-yuan-liao-gong-han">创建纽约原料工厂</a></li>
+          
+          <li><a data-id="zhong-zuo-pi-sa" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#zhong-zuo-pi-sa">重做披萨</a></li>
+          
+          <li><a data-id="zai-xiu-gai-pi-sa-dian-de-shi-xian" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#zai-xiu-gai-pi-sa-dian-de-shi-xian">再修改披萨店的实现</a></li>
+          
+          <li><a data-id="wo-men-zuo-liao-shi-yao" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#wo-men-zuo-liao-shi-yao">我们做了什么？</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="ding-yi-chou-xiang-gong-han-mo-shi" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#ding-yi-chou-xiang-gong-han-mo-shi">定义抽象工厂模式</a></li>
+        
+        
+        <li><a data-id="bi-jiao-gong-han-fang-fa-he-chou-xiang-gong-han" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#bi-jiao-gong-han-fang-fa-he-chou-xiang-gong-han">比较工厂方法和抽象工厂</a></li>
+        
+        <ul>
+          
+          <li><a data-id="gong-han-fang-fa" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#gong-han-fang-fa">工厂方法</a></li>
+          
+          <li><a data-id="chou-xiang-gong-han" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#chou-xiang-gong-han">抽象工厂</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="yao-dian" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/design/factory/#yao-dian">要点</a></li>
+        
+        
+      </ul>
+    </nav>
+  </nav>
+</div>
+
+
+        </div>
+      </div>
+    </div>
+    
+<div class="mt-4 mb-6 flex flex-row items-center justify-center">
+  <svg id="loading" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block;" width="34px" height="34px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+    <defs>
+      <clipPath id="ldio-h4a348o36ew-cp">
+        <rect x="0" y="0" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;0;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="50;0;0;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+        <rect x="0" y="50" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="100;50;50;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;50;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+      </clipPath>
+    </defs>
+    <g transform="translate(50 50)"><g transform="scale(0.9)"><g transform="translate(-50 -50)">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" dur="2.2222222222222223s" repeatCount="indefinite" values="0 50 50;0 50 50;180 50 50;180 50 50;360 50 50" keyTimes="0;0.4;0.5;0.9;1"></animateTransform>
+        <path clip-path="url(#ldio-h4a348o36ew-cp)" fill="#5699d2" d="M54.864 50L54.864 50c0-1.291 0.689-2.412 1.671-2.729c9.624-3.107 17.154-12.911 19.347-25.296 c0.681-3.844-1.698-7.475-4.791-7.475H28.908c-3.093 0-5.472 3.631-4.791 7.475c2.194 12.385 9.723 22.189 19.347 25.296 c0.982 0.317 1.671 1.438 1.671 2.729v0c0 1.291-0.689 2.412-1.671 2.729C33.84 55.836 26.311 65.64 24.117 78.025 c-0.681 3.844 1.698 7.475 4.791 7.475h42.184c3.093 0 5.472-3.631 4.791-7.475C73.689 65.64 66.16 55.836 56.536 52.729 C55.553 52.412 54.864 51.291 54.864 50z"></path>
+        <path fill="#1d3f72" d="M81 81.5h-2.724l0.091-0.578c0.178-1.122 0.17-2.243-0.022-3.333C76.013 64.42 68.103 54.033 57.703 50.483l-0.339-0.116 v-0.715l0.339-0.135c10.399-3.552 18.31-13.938 20.642-27.107c0.192-1.089 0.2-2.211 0.022-3.333L78.276 18.5H81 c2.481 0 4.5-2.019 4.5-4.5S83.481 9.5 81 9.5H19c-2.481 0-4.5 2.019-4.5 4.5s2.019 4.5 4.5 4.5h2.724l-0.092 0.578 c-0.178 1.122-0.17 2.243 0.023 3.333c2.333 13.168 10.242 23.555 20.642 27.107l0.338 0.116v0.715l-0.338 0.135 c-10.4 3.551-18.31 13.938-20.642 27.106c-0.193 1.09-0.201 2.211-0.023 3.333l0.092 0.578H19c-2.481 0-4.5 2.019-4.5 4.5 s2.019 4.5 4.5 4.5h62c2.481 0 4.5-2.019 4.5-4.5S83.481 81.5 81 81.5z M73.14 81.191L73.012 81.5H26.988l-0.128-0.309 c-0.244-0.588-0.491-1.538-0.28-2.729c2.014-11.375 8.944-20.542 17.654-23.354c2.035-0.658 3.402-2.711 3.402-5.108 c0-2.398-1.368-4.451-3.403-5.108c-8.71-2.812-15.639-11.979-17.653-23.353c-0.211-1.191 0.036-2.143 0.281-2.731l0.128-0.308 h46.024l0.128 0.308c0.244 0.589 0.492 1.541 0.281 2.731c-2.015 11.375-8.944 20.541-17.654 23.353 c-2.035 0.658-3.402 2.71-3.402 5.108c0 2.397 1.368 4.45 3.403 5.108c8.71 2.812 15.64 11.979 17.653 23.354 C73.632 79.651 73.384 80.604 73.14 81.191z"></path>
+      </g>
+    </g></g></g>
+  </svg>
+  <div id="like-btn" class="text-gray-400 hidden rounded-full border border-gray-300 p-1 px-3 flex flex-row items-center gap-2 cursor-pointer disabled">
+    <p> 👍 </p>
+    <p class="text-sm hidden" id="like-count" style="display: block;"></p>
+  </div>
+</div>
+
+
+    <footer class="flex border-t border-gray-300 text-gray-600 bg-gray-50 items-center justify-center text-sm mt-1" translate="no">
+      <div class="flex flex-col inner justify-center items-center gap-2 pt-6 pb-4">
+        <p> Be curious. Read widely. Try new things. -- Aaron Swartz </p>
+        <p> alanlang.me@gmail.com </p>
+        <ul>
+          <li class="flex flex-row gap-2">
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/archives">Archives</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/categories">Categories</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/tags">Tags</a>
+          </li>
+        </ul>
+        <p><a class="underline" href="https:&#x2F;&#x2F;alanlang.me/atom.xml">RSS</a></p>
+        <p>2022 - Present</p>
+      </div>
+    </footer>
+  </div>
+  
+<script defer type="text/javascript" src="/assets/main.js"></script>
+
+</body>
+
+</html>

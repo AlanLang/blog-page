@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta charset="utf-8">
+  
+<meta name="site" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;cloudflare-tunnel&#x2F;">
+<meta name="keywords" content="cloudflare">
+<meta name="description" content="">
+<meta name="author" content="alanlang">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<!-- OG -->
+<meta property="og:image" content="">
+<meta property="og:description" content="">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="Alan&#x27;s Blog">
+<meta property="og:url" content="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;cloudflare-tunnel&#x2F;">
+<meta property="og:title" content="CloudFlare Tunnel 内网穿透 - Alan&#x27;s Blog">
+<meta property="twitter:partner" content="ogwp">
+<!-- /OG -->
+<!-- twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CloudFlare Tunnel 内网穿透 - Alan&#x27;s Blog">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="">
+<!-- /twitter -->  
+
+  <title>CloudFlare Tunnel 内网穿透 - Alan&#x27;s Blog</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link href="/assets/main.css" rel="stylesheet">
+   
+</head>
+
+<body class="flex flex-col min-h-full">
+  <nav class="flex justify-center items-center bg-zinc-700 py-2 " translate="no">
+    <div class="inner flex justify-center items-center sm:justify-between flex-col sm:flex-row mx-1">
+      <ul class="color-white flex flex-row justify-start gap-4">
+        <li><a class="nav-link opacity-90 text-2xl" href="https:&#x2F;&#x2F;alanlang.me">Alan&#x27;s Blog</a></li>
+      </ul>
+      <ul class="color-white flex flex-row gap-3 md:gap-4 items-center text-base">
+        <li> <a class="nav-link hidden" href="https:&#x2F;&#x2F;alanlang.me/books"> Books </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/codes"> Codes </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/research"> Research </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/practical"> Practical </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/now"> Now </a> </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="flex flex-col flex-grow">
+    <div class="flex justify-center flex-grow min-h-[calc(100vh-15rem)]">
+      <div class="inner mb-2">
+        <div class="mt-4 lg:mt-6">
+          
+<h1 class="title font-medium text-2xl sm:text-3xl">
+  <a href="https:&#x2F;&#x2F;alanlang.me&#x2F;practical&#x2F;cloudflare-tunnel&#x2F;">
+      CloudFlare Tunnel 内网穿透
+  </a>
+</h1>
+<div class="flex gap-4 items-center my-1">
+ <time class="text-gray-500">2023-08-28</time>
+</div>
+<div class="prose lg:prose-xl max-w-full my-6">
+  <h2 id="gong-zuo-yuan-li">工作原理</h2>
+<p>Tunnel 通过在本地网络运行的一个 Cloudflare 守护程序，与 Cloudflare 云端通信，将云端请求数据转发到本地网络的 IP + 端口。</p>
+<h2 id="qian-zhi-tiao-jian">前置条件</h2>
+<ul>
+<li>持有一个域名</li>
+<li>将域名 DNS 解析托管到 CF</li>
+<li>内网有一台本地服务器，用于运行本地与 cloudflare 通信的 cloudflared 程序</li>
+<li>一张境内双币信用卡（仅用于添加付款方式，服务是免费的）</li>
+</ul>
+<h2 id="kai-shi">开始</h2>
+<p>打开 <a href="https://one.dash.cloudflare.com/">Cloudflare Zero Trust</a> 工作台面板, 创建 Cloudflare Zero Trust ，选择免费计划。需要提供付款方式，使用境内的双币卡即可。
+<img src="https://vip2.loli.io/2023/08/28/qgbvSpzAi2QPCFH.webp" alt="" /></p>
+<h3 id="an-zhuang-cloudflared">安装 Cloudflared</h3>
+<p>Linux 直接下载编译好的二进制包安装</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">curl -L </span><span style="color:#d07711;">&#39;https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64&#39;</span><span style="color:#5597d6;"> -o</span><span style="color:#1f1f1f;"> /usr/bin/cloudflared
+</span><span style="color:#5597d6;">chmod</span><span style="color:#1f1f1f;"> +x /usr/bin/cloudflared
+</span></code></pre><h3 id="deng-lu-cloudflared">登录 Cloudflared</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">cloudflared</span><span style="color:#1f1f1f;"> tunnel login
+</span></code></pre>
+<p>输入命令后，终端会给出一个登陆地址，我们拷贝到浏览器里面打开，选择需要授权的网站。</p>
+<aside class="info">
+    注意：授权一次只能选择一个网站。如果存在多个不同域名的网站，请授权完成后不要关闭网页，点击第二个、第三个要授权的域名，进行多次授权。
+</aside>
+<h3 id="chuang-jian-sui-dao">创建隧道</h3>
+<p>授权完以后，我们需要创建隧道。一般建议一台服务器创建一个隧道。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">cloudflared</span><span style="color:#1f1f1f;"> tunnel create </span><span style="color:#72ab00;">&lt;</span><span style="color:#1f1f1f;">隧道名字</span><span style="color:#72ab00;">&gt;
+</span></code></pre>
+<p>创建完以后，会输出隧道的一个UUID，记录下来</p>
+<h3 id="yu-ming-zhi-xiang">域名指向</h3>
+<p>接着，我们需要把域名指向到对应的隧道</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">cloudflared</span><span style="color:#1f1f1f;"> tunnel route dns </span><span style="color:#72ab00;">&lt;</span><span style="color:#1f1f1f;">隧道名字</span><span style="color:#72ab00;">&gt; &lt;</span><span style="color:#1f1f1f;">域名</span><span style="color:#72ab00;">&gt;
+</span></code></pre>
+<p>这时候，Cloudflare 会自动添加一条 CNAME 记录到对应的域名。</p>
+<h3 id="pei-zhi-cloudflared">配置 Cloudflared</h3>
+<p>接着，我们开始配置 Cloudflared，先编辑一个配置文件</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">vim ~</span><span style="color:#1f1f1f;">/.cloudflared/config.yml
+</span></code></pre>
+<p>输入下面的内容（根据自己要求编辑）</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-yml" data-lang="yml"><span style="color:#7f902a;">tunnel</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">&lt;隧道UUID&gt;
+credentials-file</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">/root/.cloudflared/&lt;隧道UUID&gt;.json
+protocol</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">h2mux
+ingress</span><span style="color:#1f1f1f;">:
+  </span><span style="color:#7f8989;"># 第一个网站，连接到本地的80端口
+  </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">hostname</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">&lt;域名1.com&gt;
+    service</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">http://localhost:80
+  </span><span style="color:#7f8989;"># 第二个网站，https协议，连接到本地的443端口，禁用证书校验（用于自签名SSL证书）
+  </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">hostname</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">&lt;域名2.com&gt;
+    service</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">https://127.0.0.1:443
+    originRequest</span><span style="color:#1f1f1f;">:
+      </span><span style="color:#7f902a;">noTLSVerify</span><span style="color:#1f1f1f;">: </span><span style="color:#b3933a;">true
+      </span><span style="color:#7f902a;">originServerName</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">&lt;域名2.com&gt;
+  </span><span style="color:#7f8989;"># 第三个网站，8012端口，泛域名
+  </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">hostname</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">&lt;*.域名3.com&gt;
+    service</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">http://localhost:8012
+  </span><span style="color:#7f8989;"># 第四个，反代MySQL sock服务
+  </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">hostname</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">&lt;mysql.域名4.com&gt;
+    service</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">unix:/tmp/mysql.sock
+  </span><span style="color:#7f8989;"># 第五个，反代SSH服务
+  </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">hostname</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">&lt;ssh.域名5.com&gt;
+    service</span><span style="color:#1f1f1f;">: </span><span style="color:#7f902a;">ssh://localhost:22
+  </span><span style="color:#1f1f1f;">- </span><span style="color:#7f902a;">service</span><span style="color:#1f1f1f;">: </span><span style="color:#d07711;">http_status:404
+</span></code></pre><aside class="info">
+    注意：最后面的 404 不能省略，否则会报错。
+</aside>
+<p>更多支持的服务和配置方式，参考帮助文档：<a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/tunnel-guide/local/local-management/ingress/?ref=bra.live#supported-protocols">Supported protocols</a>
+配置完以后，我们测试下配置文件有没有问题</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">cloudflared</span><span style="color:#1f1f1f;"> tunnel ingress validate
+</span></code></pre>
+<p>还可以再测试下规则是否命中</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">cloudflared</span><span style="color:#1f1f1f;"> tunnel ingress rule https://</span><span style="color:#72ab00;">&lt;</span><span style="color:#1f1f1f;">域名1.com</span><span style="color:#72ab00;">&gt;
+</span></code></pre><h3 id="qi-dong-cloudflared">启动 Cloudflared</h3>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">cloudflared --loglevel</span><span style="color:#1f1f1f;"> debug</span><span style="color:#5597d6;"> --transport-loglevel</span><span style="color:#1f1f1f;"> warn</span><span style="color:#5597d6;"> --config ~</span><span style="color:#1f1f1f;">/.cloudflared/config.yml tunnel run </span><span style="color:#72ab00;">&lt;</span><span style="color:#1f1f1f;">隧道UUID</span><span style="color:#72ab00;">&gt;
+</span></code></pre>
+<p>然后，我们在浏览器里面输入域名，正常情况下，你可以看到网站已经可以正常访问了。</p>
+<h3 id="chuang-jian-xi-tong-fu-wu">创建系统服务</h3>
+<p>按下 ctrl+z，先停掉刚才启动的服务。为了让服务能每次系统启动的时候都跟着启动，我们需要把Cloudflared注册成系统服务。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-sh" data-lang="sh"><span style="color:#5597d6;">cloudflared</span><span style="color:#1f1f1f;"> service install
+</span><span style="color:#5597d6;">systemctl</span><span style="color:#1f1f1f;"> start cloudflared
+</span><span style="color:#5597d6;">systemctl</span><span style="color:#1f1f1f;"> status cloudflared
+</span></code></pre>
+<p>如果看到服务已经启动，那么恭喜你，你已经成功了。</p>
+<aside class="info">
+    注意：创建系统服务后，配置文件会被拷贝到 &#x2F;etc&#x2F;cloudflared&#x2F;config.yml，后续修改配置必须修改新文件
+</aside>
+
+</div>
+
+
+
+<div class="fixed flex-col top-0 bottom-0 right-0 left-[calc((100%-48rem)/2+50rem)] items-center justify-center hidden xl:flex">
+  <nav class="docs-toc flex select-none items-center justify-center">
+    <nav>
+      <ul>
+        
+        <li><a data-id="gong-zuo-yuan-li" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#gong-zuo-yuan-li">工作原理</a></li>
+        
+        
+        <li><a data-id="qian-zhi-tiao-jian" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#qian-zhi-tiao-jian">前置条件</a></li>
+        
+        
+        <li><a data-id="kai-shi" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#kai-shi">开始</a></li>
+        
+        <ul>
+          
+          <li><a data-id="an-zhuang-cloudflared" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#an-zhuang-cloudflared">安装 Cloudflared</a></li>
+          
+          <li><a data-id="deng-lu-cloudflared" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#deng-lu-cloudflared">登录 Cloudflared</a></li>
+          
+          <li><a data-id="chuang-jian-sui-dao" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#chuang-jian-sui-dao">创建隧道</a></li>
+          
+          <li><a data-id="yu-ming-zhi-xiang" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#yu-ming-zhi-xiang">域名指向</a></li>
+          
+          <li><a data-id="pei-zhi-cloudflared" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#pei-zhi-cloudflared">配置 Cloudflared</a></li>
+          
+          <li><a data-id="qi-dong-cloudflared" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#qi-dong-cloudflared">启动 Cloudflared</a></li>
+          
+          <li><a data-id="chuang-jian-xi-tong-fu-wu" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/practical/cloudflare-tunnel/#chuang-jian-xi-tong-fu-wu">创建系统服务</a></li>
+          
+        </ul>
+        
+        
+      </ul>
+    </nav>
+  </nav>
+</div>
+
+
+        </div>
+      </div>
+    </div>
+    
+<div class="mt-4 mb-6 flex flex-row items-center justify-center">
+  <svg id="loading" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block;" width="34px" height="34px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+    <defs>
+      <clipPath id="ldio-h4a348o36ew-cp">
+        <rect x="0" y="0" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;0;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="50;0;0;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+        <rect x="0" y="50" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="100;50;50;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;50;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+      </clipPath>
+    </defs>
+    <g transform="translate(50 50)"><g transform="scale(0.9)"><g transform="translate(-50 -50)">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" dur="2.2222222222222223s" repeatCount="indefinite" values="0 50 50;0 50 50;180 50 50;180 50 50;360 50 50" keyTimes="0;0.4;0.5;0.9;1"></animateTransform>
+        <path clip-path="url(#ldio-h4a348o36ew-cp)" fill="#5699d2" d="M54.864 50L54.864 50c0-1.291 0.689-2.412 1.671-2.729c9.624-3.107 17.154-12.911 19.347-25.296 c0.681-3.844-1.698-7.475-4.791-7.475H28.908c-3.093 0-5.472 3.631-4.791 7.475c2.194 12.385 9.723 22.189 19.347 25.296 c0.982 0.317 1.671 1.438 1.671 2.729v0c0 1.291-0.689 2.412-1.671 2.729C33.84 55.836 26.311 65.64 24.117 78.025 c-0.681 3.844 1.698 7.475 4.791 7.475h42.184c3.093 0 5.472-3.631 4.791-7.475C73.689 65.64 66.16 55.836 56.536 52.729 C55.553 52.412 54.864 51.291 54.864 50z"></path>
+        <path fill="#1d3f72" d="M81 81.5h-2.724l0.091-0.578c0.178-1.122 0.17-2.243-0.022-3.333C76.013 64.42 68.103 54.033 57.703 50.483l-0.339-0.116 v-0.715l0.339-0.135c10.399-3.552 18.31-13.938 20.642-27.107c0.192-1.089 0.2-2.211 0.022-3.333L78.276 18.5H81 c2.481 0 4.5-2.019 4.5-4.5S83.481 9.5 81 9.5H19c-2.481 0-4.5 2.019-4.5 4.5s2.019 4.5 4.5 4.5h2.724l-0.092 0.578 c-0.178 1.122-0.17 2.243 0.023 3.333c2.333 13.168 10.242 23.555 20.642 27.107l0.338 0.116v0.715l-0.338 0.135 c-10.4 3.551-18.31 13.938-20.642 27.106c-0.193 1.09-0.201 2.211-0.023 3.333l0.092 0.578H19c-2.481 0-4.5 2.019-4.5 4.5 s2.019 4.5 4.5 4.5h62c2.481 0 4.5-2.019 4.5-4.5S83.481 81.5 81 81.5z M73.14 81.191L73.012 81.5H26.988l-0.128-0.309 c-0.244-0.588-0.491-1.538-0.28-2.729c2.014-11.375 8.944-20.542 17.654-23.354c2.035-0.658 3.402-2.711 3.402-5.108 c0-2.398-1.368-4.451-3.403-5.108c-8.71-2.812-15.639-11.979-17.653-23.353c-0.211-1.191 0.036-2.143 0.281-2.731l0.128-0.308 h46.024l0.128 0.308c0.244 0.589 0.492 1.541 0.281 2.731c-2.015 11.375-8.944 20.541-17.654 23.353 c-2.035 0.658-3.402 2.71-3.402 5.108c0 2.397 1.368 4.45 3.403 5.108c8.71 2.812 15.64 11.979 17.653 23.354 C73.632 79.651 73.384 80.604 73.14 81.191z"></path>
+      </g>
+    </g></g></g>
+  </svg>
+  <div id="like-btn" class="text-gray-400 hidden rounded-full border border-gray-300 p-1 px-3 flex flex-row items-center gap-2 cursor-pointer disabled">
+    <p> 👍 </p>
+    <p class="text-sm hidden" id="like-count" style="display: block;"></p>
+  </div>
+</div>
+
+
+    <footer class="flex border-t border-gray-300 text-gray-600 bg-gray-50 items-center justify-center text-sm mt-1" translate="no">
+      <div class="flex flex-col inner justify-center items-center gap-2 pt-6 pb-4">
+        <p> Be curious. Read widely. Try new things. -- Aaron Swartz </p>
+        <p> alanlang.me@gmail.com </p>
+        <ul>
+          <li class="flex flex-row gap-2">
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/archives">Archives</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/categories">Categories</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/tags">Tags</a>
+          </li>
+        </ul>
+        <p><a class="underline" href="https:&#x2F;&#x2F;alanlang.me/atom.xml">RSS</a></p>
+        <p>2022 - Present</p>
+      </div>
+    </footer>
+  </div>
+  
+<script defer type="text/javascript" src="/assets/main.js"></script>
+
+</body>
+
+</html>

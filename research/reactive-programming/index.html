@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta charset="utf-8">
+  
+<meta name="site" content="https:&#x2F;&#x2F;alanlang.me&#x2F;research&#x2F;reactive-programming&#x2F;">
+<meta name="keywords" content="code">
+<meta name="description" content="">
+<meta name="author" content="alanlang">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<!-- OG -->
+<meta property="og:image" content="https:&#x2F;&#x2F;vip2.loli.io&#x2F;2023&#x2F;06&#x2F;25&#x2F;paL2d7wckNugIHh.png">
+<meta property="og:description" content="">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="Alan&#x27;s Blog">
+<meta property="og:url" content="https:&#x2F;&#x2F;alanlang.me&#x2F;research&#x2F;reactive-programming&#x2F;">
+<meta property="og:title" content="响应式编程入门 - Alan&#x27;s Blog">
+<meta property="twitter:partner" content="ogwp">
+<!-- /OG -->
+<!-- twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="响应式编程入门 - Alan&#x27;s Blog">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="https:&#x2F;&#x2F;vip2.loli.io&#x2F;2023&#x2F;06&#x2F;25&#x2F;paL2d7wckNugIHh.png">
+<!-- /twitter -->  
+
+  <title>响应式编程入门 - Alan&#x27;s Blog</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link href="/assets/main.css" rel="stylesheet">
+   
+</head>
+
+<body class="flex flex-col min-h-full">
+  <nav class="flex justify-center items-center bg-zinc-700 py-2 " translate="no">
+    <div class="inner flex justify-center items-center sm:justify-between flex-col sm:flex-row mx-1">
+      <ul class="color-white flex flex-row justify-start gap-4">
+        <li><a class="nav-link opacity-90 text-2xl" href="https:&#x2F;&#x2F;alanlang.me">Alan&#x27;s Blog</a></li>
+      </ul>
+      <ul class="color-white flex flex-row gap-3 md:gap-4 items-center text-base">
+        <li> <a class="nav-link hidden" href="https:&#x2F;&#x2F;alanlang.me/books"> Books </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/codes"> Codes </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/research"> Research </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/practical"> Practical </a> </li>
+        <li> <a class="nav-link" href="https:&#x2F;&#x2F;alanlang.me/now"> Now </a> </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="flex flex-col flex-grow">
+    <div class="flex justify-center flex-grow min-h-[calc(100vh-15rem)]">
+      <div class="inner mb-2">
+        <div class="mt-4 lg:mt-6">
+          
+<h1 class="title font-medium text-2xl sm:text-3xl">
+  <a href="https:&#x2F;&#x2F;alanlang.me&#x2F;research&#x2F;reactive-programming&#x2F;">
+      响应式编程入门
+  </a>
+</h1>
+<div class="flex gap-4 items-center my-1">
+ <time class="text-gray-500">2022-11-09</time>
+</div>
+<div class="prose lg:prose-xl max-w-full my-6">
+  <h2 id="shi-yao-shi-xiang-ying-shi-bian-cheng">什么是响应式编程</h2>
+<aside class="info">
+    直接举个 🌰
+</aside>
+<p>比如我们有个需求，要统计发送 http 请求的次数，那么意味着我们会有两个模块，一个是 http request 用于发送 http 请求，一个是 counter 用于统计次数。其实我们的需要就是当 http 请求发送时，counter 会执行某个方法令其记录的数据 +1。
+最直接的方法就是这样：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#668f14;">class </span><span style="color:#c23f31;">HttpRequest </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#c23f31;">send</span><span style="color:#1f1f1f;">(){
+    </span><span style="color:#7f8989;">// 实际发送 http 请求的实现
+    </span><span style="color:#5597d6;">counter</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">increment</span><span style="color:#1f1f1f;">();
+  }
+}
+</span></code></pre>
+<p>当 send 方法被调用时，直接执行 <code>counter.increment()</code>，这样 counter 内的数据就 +1 了，然后我们的需求就做完了。
+当时我们仔细想想，作为一个 http 模块，它要做的事情应该只是发送一个 http 的请求，它为什么要关心计数的问题，计数明明应该是 counter 需要关心的事情。这样写的话，其实 http 模块和 counter 模块其实是耦合在一起的。
+那么我们换个思路来想，既然说计数这个事情应该是由 counter 来做，那么 counter.increment() 的行为是不是应该 counter 自己来调用。
+怎么实现呢：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#668f14;">class </span><span style="color:#c23f31;">HttpRequest </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#c23f31;">send</span><span style="color:#1f1f1f;">(){
+    </span><span style="color:#7f8989;">// 实际发送 http 请求的实现
+    </span><span style="color:#5597d6;">eventBus</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">emit</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;requestDone&quot;</span><span style="color:#1f1f1f;">)
+  }
+}
+</span></code></pre><pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#668f14;">class </span><span style="color:#c23f31;">Counter </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">constructor</span><span style="color:#1f1f1f;">(){
+    </span><span style="color:#5597d6;">eventBus</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">on</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;requestDone&quot;</span><span style="color:#1f1f1f;">).</span><span style="color:#b39f04;">then</span><span style="color:#1f1f1f;">(() </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+      </span><span style="color:#5597d6;">this</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">increment</span><span style="color:#1f1f1f;">();
+    })
+  }
+}
+</span></code></pre>
+<p>这样的话，counter 的 increment 就可以是一个私有方法，就不会被外部去改变。而 http 模块也不再需要知道 counter 模块，它只需要完成自己的本职工作就可以了（发送 http 请求）。
+所以响应式编程的优势是什么？就是我们软件工程一直提倡的：<strong>关注度分离</strong>。</p>
+<h2 id="qian-duan-de-xiang-ying-shi-bian-cheng">前端的响应式编程</h2>
+<p>其实大家作为前端开发人员，我相信大家都已经接触过响应式编程了。因为我们现在主流的前端框架都是响应式的。联想一下，在各个前端框架中，我们现在要改变视图，不是用 jquery 命令式地去改变 dom，而是通过 setState()，修改 this.data 或修改 $scope.data...。我们修改的明明只是数据，但是只要数据更新了，我们就不用管了，这些前端框架会自动帮我们把数据渲染成视图。
+<img src="https://vip2.loli.io/2022/11/09/QoDOgMBjyqY3edR.png" alt="20221109183505@2x" />
+所以有了这些响应式的框架，我们平时开发的心智模型降低了很多，我们只需要去操作数据就可以了，然而，修改数据这件事听着就很像命令式，尤其是随着产品功能越来越复杂，我们要管理的状态也越来越庞大，如果每个地方都可以随意修改这些状态的话，这些状态就会变得越来越不可控，越来越难以追溯。所以当我们开始使用这些响应式的前端框架开发比较大型的项目时，状态管理尤为重要，如果还是以之前命令式的思想去修改状态，无非是从一个地狱跳入到另一个地狱。
+为了解决管理状态这个痛点，好多状态管理的库应运而生，不管是 Redux 还是 Mobx，他们解决的方向都是为了让状态的变化可预测，另外再提供一些撤销/重做，时间旅行等附加功能。当时他们都没有解决状态从产生变化再实际 set state 的这段过程该怎么管理。所以我们还是免不了写一大堆命令式的代码去修改状态。
+既然现在主流的框架都是响应式的，我们也慢慢摒弃了 jquery 这种命令式的开发视图的模式，说明响应式对于我们前端开发来说是适合的，那么既然视图的更新我们已经做到了响应式的，是不是数据的更新也可以弄成响应式的？视图的响应式开发让我们避免了操作 DOM，而数据的响应式开发则会让我们避免操作 store。我们只需要关心数据的来源即可，来源的数据产生了变化，store 自然而然会跟着变化。</p>
+<h2 id="zen-yao-shi-xian-xiang-ying-shi-bian-cheng">怎么实现响应式编程</h2>
+<ul>
+<li>EventBus</li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties">Object.defineProperties</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy">ES2015 Proxy</a></li>
+<li>Streams (with some libraries like RxJS,xstream)</li>
+</ul>
+<p>今天我们主要讲最后一个实现方式：数据流</p>
+<h2 id="shi-yao-shi-shu-ju-liu-stream">什么是数据流 Stream</h2>
+<p>大家都知道数组，数组是什么？是内存中的一片空间来存储我们数据的数据结构。所以数组是空间上的序列。
+而数据流，则是时间上的数据序列。
+<img src="https://vip2.loli.io/2022/11/09/ZpXj6QilmGNcfOT.png" alt="20221109183637@2x" />
+有了数据流之后可以做什么呢？还是继续和数组来对比。</p>
+<h3 id="map-cao-zuo">map 操作</h3>
+<p>数组可以通过 map，把一个数据转换成另一个数组：
+<img src="https://vip2.loli.io/2022/11/09/xp3Y14y2aPi59uN.png" alt="20221109183745@2x" />
+而数据流也可以通过 map，把一个数据流转换成另一个数据流：
+<img src="https://vip2.loli.io/2022/11/09/SiWqd9rzbZFj3eG.png" alt="20221109183825@2x" /></p>
+<h3 id="filter-cao-zuo">filter 操作</h3>
+<p>数组还可以通过 filter，生成一个新数组，数据为过滤后的结果：
+<img src="https://vip2.loli.io/2022/11/11/lN5rBf1wSs7To3v.png" alt="20221111091214@2x" />
+数据流同样也可以，通过 filter 来生成一个新数据流，数据为过滤后的结果：
+<img src="https://vip2.loli.io/2022/11/11/AdjD3YQaxNyVi91.png" alt="20221111091304@2x" /></p>
+<h3 id="shi-jian-wei-du-de-chu-li">时间维度的处理</h3>
+<p>相比于数组，由于数据流是时间概念的，所以还可以做一些和时间有关的操作
+比如我生成一个新的数据流，相比于之前的数据流延迟 2s
+<img src="https://vip2.loli.io/2022/11/09/dMTDa5yEiXwv2Hc.png" alt="20221109184121@2x" />
+或者按照时间顺序，合并两个数据流
+<img src="https://vip2.loli.io/2022/11/09/ButOjbHolLDrXZ1.png" alt="20221109184230@2x" />
+RxJS 中内置了许多用于操作数据流的操作符，基本满足我们日常的使用，即使不满足，我们也可以自己写操作符。
+https://rxjs.dev/api</p>
+<h2 id="shu-ju-shi-ru-he-chan-sheng-de">数据是如何产生的</h2>
+<p>我们先看一下 React 是怎么渲染页面的：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-tsx" data-lang="tsx"><span style="color:#5597d6;">ReactDOM</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">createRoot</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">getElementById</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;root&quot;</span><span style="color:#1f1f1f;">)).</span><span style="color:#c23f31;">render</span><span style="color:#1f1f1f;">(
+  </span><span style="color:#6486ab;">&lt;</span><span style="color:#a2a001;">App </span><span style="color:#6486ab;">/&gt;
+</span><span style="color:#1f1f1f;">);
+</span></code></pre>
+<p>其实就是这个 render 方法，这个方法只会在加载时执行一次，我们传入一个 <code>&lt;App /&gt;</code>
+而 <code>&lt;App /&gt;</code>是什么？我们都知道，它就是一个函数，函数签名是<code>function App():JSX.Element</code>
+这个函数没有参数，但是返回的结果每次都不一样，所以这个函数不是纯函数，说明是有副作用导致了这个函数里面的数据发生了变化，从而令这个函数返回不同的内容，那么这些副作用，就是产生数据的地方，他们是可以枚举的：</p>
+<ul>
+<li>Event - 浏览器的一系列原生事件</li>
+<li>XHR - XMLHttpRequest</li>
+<li>Timers - setTimeout( ) 、setInterval( )</li>
+</ul>
+<p>那么我们只要管理好这些数据变化的来源，再保证数据的流转过程，这样整个数据变化又变成了一个纯函数，即只要我们知道了来源的数据变更，就一定能推断出最终的结果。
+<img src="https://vip2.loli.io/2022/11/09/2ucdvQhqZbL4Oya.png" alt="20221109184617@2x" /></p>
+<h2 id="yi-xie-xiao-de-ying-yong-shi-li">一些小的应用示例</h2>
+<p>响应式编程提高了代码的抽象层级，所以你可以只关注定义了业务逻辑的那些相互依赖的事件，而非纠缠于大量的实现细节。RP 的代码往往会更加简明。</p>
+<h3 id="shi-li-yi">示例一</h3>
+<p>如果我想每点击一次就打印一句“Clicked”，我们一般都会这样写：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">addEventListener</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;click&#39;</span><span style="color:#1f1f1f;">, () </span><span style="color:#668f14;">=&gt; </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Clicked!&#39;</span><span style="color:#1f1f1f;">));
+</span></code></pre>
+<p>很直观很简洁，没有什么问题。
+如果用响应式的方式去实现，则会是这样：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">import </span><span style="color:#1f1f1f;">{ </span><span style="color:#5597d6;">fromEvent </span><span style="color:#1f1f1f;">} </span><span style="color:#72ab00;">from </span><span style="color:#d07711;">&#39;rxjs&#39;</span><span style="color:#1f1f1f;">;
+
+</span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;click&#39;</span><span style="color:#1f1f1f;">).</span><span style="color:#c23f31;">subscribe</span><span style="color:#1f1f1f;">(() </span><span style="color:#668f14;">=&gt; </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Clicked!&#39;</span><span style="color:#1f1f1f;">));
+</span></code></pre>
+<p>大家可能看着没什么区别，感觉就是 api 的名称变了而已，那我稍微换一下写法：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">import </span><span style="color:#1f1f1f;">{ </span><span style="color:#5597d6;">fromEvent </span><span style="color:#1f1f1f;">} </span><span style="color:#72ab00;">from </span><span style="color:#d07711;">&#39;rxjs&#39;</span><span style="color:#1f1f1f;">;
+
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">clickEvent$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;click&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#5597d6;">clickEvent$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">subscribe</span><span style="color:#1f1f1f;">(() </span><span style="color:#668f14;">=&gt; </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;Clicked!&#39;</span><span style="color:#1f1f1f;">));
+</span></code></pre>
+<p>这样大家可能就能看出不一样的地方了，前者是监听了一个事件，所后面所有的事情都只能在事件的回调函数里面处理。而我后者则是订阅的数据流，我所有的业务逻辑，都可以通过改变这个数据流来实现。
+比如说，我开始有新需求了，我想统计我点击次数，每次点击打印的内容 + 1。
+按照之前命令式的写法，我们会这样写：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#668f14;">let </span><span style="color:#5597d6;">count </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">0</span><span style="color:#1f1f1f;">;
+</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">addEventListener</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;click&#39;</span><span style="color:#1f1f1f;">, () </span><span style="color:#668f14;">=&gt; </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">`Clicked ${</span><span style="color:#72ab00;">++</span><span style="color:#acb3c2;">count</span><span style="color:#d07711;">} times`</span><span style="color:#1f1f1f;">));
+</span></code></pre>
+<p>这下好了，我们需要维护状态了，因为我们需要保存一下之前打印的内容，从而在新打印的时候 + 1。
+命令式编程就是这样，先定义数据，然后通过指令改变数据。
+如何用响应式写法去做呢：</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">import </span><span style="color:#1f1f1f;">{ </span><span style="color:#5597d6;">fromEvent</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">scan </span><span style="color:#1f1f1f;">} </span><span style="color:#72ab00;">from </span><span style="color:#d07711;">&#39;rxjs&#39;</span><span style="color:#1f1f1f;">;
+
+</span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;click&#39;</span><span style="color:#1f1f1f;">)
+  .</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(</span><span style="color:#c23f31;">scan</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">count</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#5597d6;">count </span><span style="color:#72ab00;">+ </span><span style="color:#b3933a;">1</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">0</span><span style="color:#1f1f1f;">))
+  .</span><span style="color:#c23f31;">subscribe</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">count</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">`Clicked ${</span><span style="color:#acb3c2;">count</span><span style="color:#d07711;">} times`</span><span style="color:#1f1f1f;">));
+</span></code></pre>
+<p>看，依然是一个纯函数，我们不再需要维护一个类似 count 的状态。</p>
+<p>继续，我们再添加新的需求：我想限制一秒内只能点击一次
+换成命令式的写法该怎么做？我们又需要维护一个状态，来保存上一次点击的时间，然后在点击触发的时候判断两次时间有没有超过一秒，如果未超过，就不打印东西。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#668f14;">let </span><span style="color:#5597d6;">conut </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">0</span><span style="color:#1f1f1f;">;
+</span><span style="color:#668f14;">let </span><span style="color:#5597d6;">rate </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">1000</span><span style="color:#1f1f1f;">;
+</span><span style="color:#668f14;">let </span><span style="color:#5597d6;">lastClick </span><span style="color:#72ab00;">= </span><span style="color:#a2a001;">Date</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">now</span><span style="color:#1f1f1f;">() </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">rate</span><span style="color:#1f1f1f;">;
+</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">addEventListener</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;click&#39;</span><span style="color:#1f1f1f;">, () </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#72ab00;">if </span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">Date</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">now</span><span style="color:#1f1f1f;">() </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">lastClick </span><span style="color:#72ab00;">&gt;= </span><span style="color:#5597d6;">rate</span><span style="color:#1f1f1f;">) {
+    </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">`你点击了${</span><span style="color:#72ab00;">++</span><span style="color:#acb3c2;">conut</span><span style="color:#d07711;">}次`</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#5597d6;">lastClick </span><span style="color:#72ab00;">= </span><span style="color:#a2a001;">Date</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">now</span><span style="color:#1f1f1f;">();
+  }
+});
+</span></code></pre>
+<p>现在，我们已经需要维护两个状态了。而随着功能迭代越来越多，不可避免得我们要维护的状态也会越来越多。而命令式编程带来的问题就是每条命令都是离散的，我们如果想了解一段代码的逻辑，就只能跟着代码运行的过程一条一条去看。代码多了，一个代码块里就可能会参杂好几处逻辑，我们代码的可读性就会变得越来越差。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">import </span><span style="color:#1f1f1f;">{ </span><span style="color:#5597d6;">of</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">map</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">throttleTime</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">fromEvent</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">scan</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">count </span><span style="color:#1f1f1f;">} </span><span style="color:#72ab00;">from </span><span style="color:#d07711;">&#39;rxjs&#39;</span><span style="color:#1f1f1f;">;
+
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">clickEvent$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;click&#39;</span><span style="color:#1f1f1f;">);
+
+</span><span style="color:#5597d6;">clickEvent$
+  </span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+    </span><span style="color:#c23f31;">throttleTime</span><span style="color:#1f1f1f;">(</span><span style="color:#b3933a;">1000</span><span style="color:#1f1f1f;">),
+    </span><span style="color:#c23f31;">scan</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">count</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#5597d6;">count </span><span style="color:#72ab00;">+ </span><span style="color:#b3933a;">1</span><span style="color:#1f1f1f;">, </span><span style="color:#b3933a;">0</span><span style="color:#1f1f1f;">)
+  )
+  .</span><span style="color:#c23f31;">subscribe</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">count</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#a2a001;">console</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">log</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">`你点击了${</span><span style="color:#acb3c2;">count</span><span style="color:#d07711;">}次`</span><span style="color:#1f1f1f;">));
+</span></code></pre>
+<p>而反观响应式的编程方式，基本上就是靠纯函数的组合来实现业务逻辑，读代码时也不需要安装代码执行的步骤一条一条去看，因为每个函数都是自描述的，就像是用一些单词，拼成了一条完整的句子。</p>
+<h3 id="shi-li-er">示例二</h3>
+<p>实现一个简单的拖拽功能</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#668f14;">const </span><span style="color:#5597d6;">box </span><span style="color:#72ab00;">= </span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">getElementById</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;box&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#7f8989;">// 获取鼠标点击时在 div 中的相对位置
+</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">onmousedown </span><span style="color:#72ab00;">= </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">ev</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#668f14;">const </span><span style="color:#1f1f1f;">{ </span><span style="color:#5597d6;">x</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">y </span><span style="color:#1f1f1f;">} </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">getTranslate</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">);
+  </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">relaX </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">ev</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientX </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">x</span><span style="color:#1f1f1f;">;
+  </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">relaY </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">ev</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientY </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">y</span><span style="color:#1f1f1f;">;
+
+  </span><span style="color:#7f8989;">// 获取当前鼠标位置，减去与 div 的相对位置得到当前 div 应该被拖拽的位置
+  </span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">onmousemove </span><span style="color:#72ab00;">= </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">ev</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#c23f31;">setTranslate</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">, { x: </span><span style="color:#5597d6;">ev</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientX </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">relaX</span><span style="color:#1f1f1f;">, y: </span><span style="color:#5597d6;">ev</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientY </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">relaY </span><span style="color:#1f1f1f;">});
+  };
+  </span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">onmouseup </span><span style="color:#72ab00;">= </span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">ev</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">onmousemove </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">null</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">onmouseup </span><span style="color:#72ab00;">= </span><span style="color:#b3933a;">null</span><span style="color:#1f1f1f;">;
+  };
+};
+</span></code></pre>
+<p>https://stackblitz.com/edit/typescript-8pa41d?file=index.ts</p>
+<p>如果用数据流编程的思路，改怎么做。
+首先分析一下，为了相应地移动小方块，我们需要知道的信息有：</p>
+<ol>
+<li>小方块被拖拽时的初始位置</li>
+<li>小方块在被拖拽着移动时，需要移动到的新位置</li>
+</ol>
+<p>而怎么理解拖拽呢？我们可以用弹珠图来直观得表示：
+<img src="https://vip2.loli.io/2022/11/09/qLEce3UIViRPJGY.png" alt="20221109185017@2x" />
+这样我们就可以很直观的看出，drag 的数据流，就是取鼠标按下和抬起之间的 mousemove 数据流就可以了，这么我们只需要按照我们的思路操作数据流即可，而 RxJS 内置的操作符则方便了我们的操作。
+http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-switchMap
+http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeUntil</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#668f14;">const </span><span style="color:#5597d6;">box </span><span style="color:#72ab00;">= </span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">getElementById</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;box&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">mouseDown$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;mousedown&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">mouseMove$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;mousemove&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">mouseUp$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;mouseup&#39;</span><span style="color:#1f1f1f;">);
+
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">drag$ </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">mouseDown$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+  </span><span style="color:#c23f31;">map</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">event</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">MouseEvent</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#72ab00;">return </span><span style="color:#1f1f1f;">{
+      pos: </span><span style="color:#c23f31;">getTranslate</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">),
+      </span><span style="color:#5597d6;">event</span><span style="color:#1f1f1f;">,
+    };
+  }),
+  </span><span style="color:#c23f31;">switchMap</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">initialState</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">initialPos </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">initialState</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#668f14;">const </span><span style="color:#1f1f1f;">{ </span><span style="color:#5597d6;">clientX</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">clientY </span><span style="color:#1f1f1f;">} </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">initialState</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">event</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">mouseMove$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+      </span><span style="color:#c23f31;">map</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">moveEvent</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">MouseEvent</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+        </span><span style="color:#72ab00;">return </span><span style="color:#1f1f1f;">{
+          x: </span><span style="color:#5597d6;">moveEvent</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientX </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">clientX </span><span style="color:#72ab00;">+ </span><span style="color:#5597d6;">initialPos</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">x</span><span style="color:#1f1f1f;">,
+          y: </span><span style="color:#5597d6;">moveEvent</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientY </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">clientY </span><span style="color:#72ab00;">+ </span><span style="color:#5597d6;">initialPos</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">y</span><span style="color:#1f1f1f;">,
+        };
+      }),
+      </span><span style="color:#c23f31;">takeUntil</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">mouseUp$</span><span style="color:#1f1f1f;">)
+    );
+  })
+);
+
+</span><span style="color:#5597d6;">drag$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">subscribe</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#c23f31;">setTranslate</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">);
+});
+</span></code></pre>
+<p>https://stackblitz.com/edit/rxjs-6jxpu7?devtoolsheight=60&amp;file=index.ts</p>
+<h3 id="tian-jia-chu-shi-yan-chi">添加初始延迟</h3>
+<p>需求：在拖拽的实际应用中，有时会希望有个初始延迟。</p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">import </span><span style="color:#1f1f1f;">{ </span><span style="color:#5597d6;">delay</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">fromEvent</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">takeUntil</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">map</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">switchMap</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">of </span><span style="color:#1f1f1f;">} </span><span style="color:#72ab00;">from </span><span style="color:#d07711;">&#39;rxjs&#39;</span><span style="color:#1f1f1f;">;
+
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">box </span><span style="color:#72ab00;">= </span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">getElementById</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;box&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">mouseDown$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;mousedown&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">mouseMove$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;mousemove&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">mouseUp$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;mouseup&#39;</span><span style="color:#1f1f1f;">);
+
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">drag$ </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">mouseDown$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+  </span><span style="color:#c23f31;">switchMap</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">event</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">MouseEvent</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#72ab00;">return </span><span style="color:#c23f31;">of</span><span style="color:#1f1f1f;">({
+      pos: </span><span style="color:#c23f31;">getTranslate</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">),
+      </span><span style="color:#5597d6;">event</span><span style="color:#1f1f1f;">,
+    }).</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(</span><span style="color:#c23f31;">delay</span><span style="color:#1f1f1f;">(</span><span style="color:#b3933a;">200</span><span style="color:#1f1f1f;">), </span><span style="color:#c23f31;">takeUntil</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">mouseMove$</span><span style="color:#1f1f1f;">));
+  }),
+  </span><span style="color:#c23f31;">switchMap</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">initialState</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">initialPos </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">initialState</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#668f14;">const </span><span style="color:#1f1f1f;">{ </span><span style="color:#5597d6;">clientX</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">clientY </span><span style="color:#1f1f1f;">} </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">initialState</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">event</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">mouseMove$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+      </span><span style="color:#c23f31;">map</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">moveEvent</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">MouseEvent</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+        </span><span style="color:#72ab00;">return </span><span style="color:#1f1f1f;">{
+          x: </span><span style="color:#5597d6;">moveEvent</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientX </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">clientX </span><span style="color:#72ab00;">+ </span><span style="color:#5597d6;">initialPos</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">x</span><span style="color:#1f1f1f;">,
+          y: </span><span style="color:#5597d6;">moveEvent</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientY </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">clientY </span><span style="color:#72ab00;">+ </span><span style="color:#5597d6;">initialPos</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">y</span><span style="color:#1f1f1f;">,
+        };
+      }),
+      </span><span style="color:#c23f31;">takeUntil</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">mouseUp$</span><span style="color:#1f1f1f;">)
+    );
+  })
+);
+
+</span><span style="color:#5597d6;">drag$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">subscribe</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#c23f31;">setTranslate</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">);
+});
+</span></code></pre><h3 id="tuo-zhuai-jie-long">拖拽接龙</h3>
+<p>实现拖动一个方块时，其他方块会在一定的延迟后跟着拖动的方块一起动。
+<img src="https://vip2.loli.io/2022/11/09/FejibpRt1zdUAur.png" alt="20221109185425@2x" /></p>
+<pre style="background-color:#f5f5f5;">
+<code class="language-ts" data-lang="ts"><span style="color:#72ab00;">import </span><span style="color:#1f1f1f;">{
+  </span><span style="color:#5597d6;">fromEvent</span><span style="color:#1f1f1f;">,
+  </span><span style="color:#5597d6;">map</span><span style="color:#1f1f1f;">,
+  </span><span style="color:#5597d6;">interval</span><span style="color:#1f1f1f;">,
+  </span><span style="color:#5597d6;">switchMap</span><span style="color:#1f1f1f;">,
+  </span><span style="color:#5597d6;">takeUntil</span><span style="color:#1f1f1f;">,
+  </span><span style="color:#5597d6;">mergeMap</span><span style="color:#1f1f1f;">,
+  </span><span style="color:#5597d6;">tap</span><span style="color:#1f1f1f;">,
+  </span><span style="color:#5597d6;">take</span><span style="color:#1f1f1f;">,
+} </span><span style="color:#72ab00;">from </span><span style="color:#d07711;">&#39;rxjs&#39;</span><span style="color:#1f1f1f;">;
+
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">headBox </span><span style="color:#72ab00;">= </span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">getElementById</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;head&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">boxes </span><span style="color:#72ab00;">= </span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">.</span><span style="color:#b39f04;">getElementsByClassName</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&#39;box&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">mouseDown$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">headBox</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;mousedown&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">mouseMove$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;mousemove&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">mouseUp$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">fromEvent</span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">document</span><span style="color:#1f1f1f;">, </span><span style="color:#d07711;">&#39;mouseup&#39;</span><span style="color:#1f1f1f;">);
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">delayBoxes$ </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">interval</span><span style="color:#1f1f1f;">(</span><span style="color:#b3933a;">100</span><span style="color:#1f1f1f;">).</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+  </span><span style="color:#c23f31;">take</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">boxes</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">length</span><span style="color:#1f1f1f;">),
+  </span><span style="color:#c23f31;">map</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">n</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#5597d6;">boxes</span><span style="color:#1f1f1f;">[</span><span style="color:#5597d6;">n</span><span style="color:#1f1f1f;">])
+);
+
+</span><span style="color:#668f14;">const </span><span style="color:#5597d6;">drag$ </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">mouseDown$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+  </span><span style="color:#c23f31;">map</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">e</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">MouseEvent</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">pos </span><span style="color:#72ab00;">= </span><span style="color:#c23f31;">getTranslate</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">headBox</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#72ab00;">return </span><span style="color:#1f1f1f;">{
+      </span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">,
+      event: </span><span style="color:#5597d6;">e</span><span style="color:#1f1f1f;">,
+    };
+  }),
+  </span><span style="color:#c23f31;">switchMap</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">initialState</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+    </span><span style="color:#668f14;">const </span><span style="color:#5597d6;">initialPos </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">initialState</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#668f14;">const </span><span style="color:#1f1f1f;">{ </span><span style="color:#5597d6;">clientX</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">clientY </span><span style="color:#1f1f1f;">} </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">initialState</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">event</span><span style="color:#1f1f1f;">;
+    </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">mouseMove$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+      </span><span style="color:#c23f31;">map</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">moveEvent</span><span style="color:#72ab00;">: </span><span style="color:#c23f31;">MouseEvent</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">({
+        x: </span><span style="color:#5597d6;">moveEvent</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientX </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">clientX </span><span style="color:#72ab00;">+ </span><span style="color:#5597d6;">initialPos</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">x</span><span style="color:#1f1f1f;">,
+        y: </span><span style="color:#5597d6;">moveEvent</span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">clientY </span><span style="color:#72ab00;">- </span><span style="color:#5597d6;">clientY </span><span style="color:#72ab00;">+ </span><span style="color:#5597d6;">initialPos</span><span style="color:#1f1f1f;">.</span><span style="color:#a2a001;">y</span><span style="color:#1f1f1f;">,
+      })),
+      </span><span style="color:#c23f31;">takeUntil</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">mouseUp$</span><span style="color:#1f1f1f;">)
+    );
+  })
+);
+
+</span><span style="color:#5597d6;">drag$
+  </span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+    </span><span style="color:#c23f31;">mergeMap</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+      </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">delayBoxes$</span><span style="color:#1f1f1f;">.</span><span style="color:#c23f31;">pipe</span><span style="color:#1f1f1f;">(
+        </span><span style="color:#c23f31;">tap</span><span style="color:#1f1f1f;">((</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">) </span><span style="color:#668f14;">=&gt; </span><span style="color:#1f1f1f;">{
+          </span><span style="color:#c23f31;">setTranslate</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">box</span><span style="color:#1f1f1f;">, </span><span style="color:#5597d6;">pos</span><span style="color:#1f1f1f;">);
+        })
+      );
+    })
+  )
+  .</span><span style="color:#c23f31;">subscribe</span><span style="color:#1f1f1f;">();
+</span></code></pre>
+<p><a href="https://stackblitz.com/edit/rxjs-t2xwfi?devtoolsheight=60&amp;file=index.ts">https://stackblitz.com/edit/rxjs-t2xwfi?devtoolsheight=60&amp;file=index.ts</a></p>
+<h2 id="zong-jie">总结</h2>
+<p>命令式编程虽然建模很容易，但是只是针对你已知情况的复刻，它要求你必须知道事情的全部的原因和结果，对一个问题的中间变化，各种情况都要了如指掌。各种各样不同的情境也都需要考虑到，只有这样才能把现实问题在计算机中复刻出来。因为一个运算一个操作，它就是在你已经知道了真是的前因后果后定义出来的，你无法定义你不知道结果的操作。
+而函数响应式编程它复刻的就不是某个具体的问题了，而是这个问题背后的逻辑和规律。然后根据这个逻辑和规律去重建整个系统。
+有兴趣的话大家可以了解下图灵机和λ演算法。命令式编程的思想就是来源于图灵机，函数编程的思想就是来源于λ演算法。二者是等价的，都是图灵完备，只不过是解决同一个问题的不同思路而已。</p>
+
+</div>
+
+
+
+<div class="fixed flex-col top-0 bottom-0 right-0 left-[calc((100%-48rem)/2+50rem)] items-center justify-center hidden xl:flex">
+  <nav class="docs-toc flex select-none items-center justify-center">
+    <nav>
+      <ul>
+        
+        <li><a data-id="shi-yao-shi-xiang-ying-shi-bian-cheng" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#shi-yao-shi-xiang-ying-shi-bian-cheng">什么是响应式编程</a></li>
+        
+        
+        <li><a data-id="qian-duan-de-xiang-ying-shi-bian-cheng" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#qian-duan-de-xiang-ying-shi-bian-cheng">前端的响应式编程</a></li>
+        
+        
+        <li><a data-id="zen-yao-shi-xian-xiang-ying-shi-bian-cheng" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#zen-yao-shi-xian-xiang-ying-shi-bian-cheng">怎么实现响应式编程</a></li>
+        
+        
+        <li><a data-id="shi-yao-shi-shu-ju-liu-stream" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#shi-yao-shi-shu-ju-liu-stream">什么是数据流 Stream</a></li>
+        
+        <ul>
+          
+          <li><a data-id="map-cao-zuo" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#map-cao-zuo">map 操作</a></li>
+          
+          <li><a data-id="filter-cao-zuo" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#filter-cao-zuo">filter 操作</a></li>
+          
+          <li><a data-id="shi-jian-wei-du-de-chu-li" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#shi-jian-wei-du-de-chu-li">时间维度的处理</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="shu-ju-shi-ru-he-chan-sheng-de" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#shu-ju-shi-ru-he-chan-sheng-de">数据是如何产生的</a></li>
+        
+        
+        <li><a data-id="yi-xie-xiao-de-ying-yong-shi-li" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#yi-xie-xiao-de-ying-yong-shi-li">一些小的应用示例</a></li>
+        
+        <ul>
+          
+          <li><a data-id="shi-li-yi" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#shi-li-yi">示例一</a></li>
+          
+          <li><a data-id="shi-li-er" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#shi-li-er">示例二</a></li>
+          
+          <li><a data-id="tian-jia-chu-shi-yan-chi" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#tian-jia-chu-shi-yan-chi">添加初始延迟</a></li>
+          
+          <li><a data-id="tuo-zhuai-jie-long" class="docs-toc-item text-xs ml-2 opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#tuo-zhuai-jie-long">拖拽接龙</a></li>
+          
+        </ul>
+        
+        
+        <li><a data-id="zong-jie" class="docs-toc-item text-xs opacity-50 transition-opacity duration-300" href="https://alanlang.me/research/reactive-programming/#zong-jie">总结</a></li>
+        
+        
+      </ul>
+    </nav>
+  </nav>
+</div>
+
+
+        </div>
+      </div>
+    </div>
+    
+<div class="mt-4 mb-6 flex flex-row items-center justify-center">
+  <svg id="loading" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block;" width="34px" height="34px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+    <defs>
+      <clipPath id="ldio-h4a348o36ew-cp">
+        <rect x="0" y="0" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;0;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="50;0;0;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+        <rect x="0" y="50" width="100" height="50">
+          <animate attributeName="y" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="100;50;50;50;50" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+          <animate attributeName="height" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" values="0;50;50;0;0" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7;0.3 0 1 0.7"></animate>
+        </rect>
+      </clipPath>
+    </defs>
+    <g transform="translate(50 50)"><g transform="scale(0.9)"><g transform="translate(-50 -50)">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" dur="2.2222222222222223s" repeatCount="indefinite" values="0 50 50;0 50 50;180 50 50;180 50 50;360 50 50" keyTimes="0;0.4;0.5;0.9;1"></animateTransform>
+        <path clip-path="url(#ldio-h4a348o36ew-cp)" fill="#5699d2" d="M54.864 50L54.864 50c0-1.291 0.689-2.412 1.671-2.729c9.624-3.107 17.154-12.911 19.347-25.296 c0.681-3.844-1.698-7.475-4.791-7.475H28.908c-3.093 0-5.472 3.631-4.791 7.475c2.194 12.385 9.723 22.189 19.347 25.296 c0.982 0.317 1.671 1.438 1.671 2.729v0c0 1.291-0.689 2.412-1.671 2.729C33.84 55.836 26.311 65.64 24.117 78.025 c-0.681 3.844 1.698 7.475 4.791 7.475h42.184c3.093 0 5.472-3.631 4.791-7.475C73.689 65.64 66.16 55.836 56.536 52.729 C55.553 52.412 54.864 51.291 54.864 50z"></path>
+        <path fill="#1d3f72" d="M81 81.5h-2.724l0.091-0.578c0.178-1.122 0.17-2.243-0.022-3.333C76.013 64.42 68.103 54.033 57.703 50.483l-0.339-0.116 v-0.715l0.339-0.135c10.399-3.552 18.31-13.938 20.642-27.107c0.192-1.089 0.2-2.211 0.022-3.333L78.276 18.5H81 c2.481 0 4.5-2.019 4.5-4.5S83.481 9.5 81 9.5H19c-2.481 0-4.5 2.019-4.5 4.5s2.019 4.5 4.5 4.5h2.724l-0.092 0.578 c-0.178 1.122-0.17 2.243 0.023 3.333c2.333 13.168 10.242 23.555 20.642 27.107l0.338 0.116v0.715l-0.338 0.135 c-10.4 3.551-18.31 13.938-20.642 27.106c-0.193 1.09-0.201 2.211-0.023 3.333l0.092 0.578H19c-2.481 0-4.5 2.019-4.5 4.5 s2.019 4.5 4.5 4.5h62c2.481 0 4.5-2.019 4.5-4.5S83.481 81.5 81 81.5z M73.14 81.191L73.012 81.5H26.988l-0.128-0.309 c-0.244-0.588-0.491-1.538-0.28-2.729c2.014-11.375 8.944-20.542 17.654-23.354c2.035-0.658 3.402-2.711 3.402-5.108 c0-2.398-1.368-4.451-3.403-5.108c-8.71-2.812-15.639-11.979-17.653-23.353c-0.211-1.191 0.036-2.143 0.281-2.731l0.128-0.308 h46.024l0.128 0.308c0.244 0.589 0.492 1.541 0.281 2.731c-2.015 11.375-8.944 20.541-17.654 23.353 c-2.035 0.658-3.402 2.71-3.402 5.108c0 2.397 1.368 4.45 3.403 5.108c8.71 2.812 15.64 11.979 17.653 23.354 C73.632 79.651 73.384 80.604 73.14 81.191z"></path>
+      </g>
+    </g></g></g>
+  </svg>
+  <div id="like-btn" class="text-gray-400 hidden rounded-full border border-gray-300 p-1 px-3 flex flex-row items-center gap-2 cursor-pointer disabled">
+    <p> 👍 </p>
+    <p class="text-sm hidden" id="like-count" style="display: block;"></p>
+  </div>
+</div>
+
+
+    <footer class="flex border-t border-gray-300 text-gray-600 bg-gray-50 items-center justify-center text-sm mt-1" translate="no">
+      <div class="flex flex-col inner justify-center items-center gap-2 pt-6 pb-4">
+        <p> Be curious. Read widely. Try new things. -- Aaron Swartz </p>
+        <p> alanlang.me@gmail.com </p>
+        <ul>
+          <li class="flex flex-row gap-2">
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/archives">Archives</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/categories">Categories</a>
+            <a class="underline" href="https:&#x2F;&#x2F;alanlang.me/tags">Tags</a>
+          </li>
+        </ul>
+        <p><a class="underline" href="https:&#x2F;&#x2F;alanlang.me/atom.xml">RSS</a></p>
+        <p>2022 - Present</p>
+      </div>
+    </footer>
+  </div>
+  
+<script defer type="text/javascript" src="/assets/main.js"></script>
+
+</body>
+
+</html>
